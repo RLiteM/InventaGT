@@ -8,6 +8,7 @@ public class InventaApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(InventaApplication.class, args);
+		// Hola
 	}
 
 }
