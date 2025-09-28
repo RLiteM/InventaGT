@@ -1,6 +1,7 @@
 package com.inventa.inventa.service;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.inventa.inventa.entity.Categoria;
@@ -16,6 +17,10 @@ public class CategoriaService {
 
     public List<Categoria> listar() {
         return categoriaRepository.findAll();
+    }
+
+    public Optional<Categoria> buscarPorId(Integer id) {
+        return categoriaRepository.findById(id);
     }
 
     public Categoria guardar(Categoria categoria) {
