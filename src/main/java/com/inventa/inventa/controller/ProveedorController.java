@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.inventa.inventa.dto.proveedor.ProveedorRequestDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorResponseDTO;
 import com.inventa.inventa.entity.Proveedor;
+import com.inventa.inventa.mapper.ProveedorMapper;
 import com.inventa.inventa.service.ProveedorService;
 
 @RestController
@@ -17,37 +18,39 @@ import com.inventa.inventa.service.ProveedorService;
 public class ProveedorController {
 
     private final ProveedorService proveedorService;
+    private final ProveedorMapper proveedorMapper;
 
-    public ProveedorController(ProveedorService proveedorService) {
+    public ProveedorController(ProveedorService proveedorService, ProveedorMapper proveedorMapper) {
         this.proveedorService = proveedorService;
+        this.proveedorMapper = proveedorMapper;
     }
 
     @GetMapping
     public List<ProveedorResponseDTO> listar() {
-        return proveedorService.listar().stream().map(this::toResponse).collect(Collectors.toList());
+        return proveedorService.listar().stream().map(proveedorMapper::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public ProveedorResponseDTO obtenerPorId(@PathVariable Integer id) {
         Proveedor proveedor = proveedorService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
-        return toResponse(proveedor);
+        return proveedorMapper.toResponse(proveedor);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProveedorResponseDTO crear(@RequestBody ProveedorRequestDTO dto) {
         Proveedor proveedor = new Proveedor();
-        aplicarCambios(proveedor, dto);
-        return toResponse(proveedorService.guardar(proveedor));
+        proveedorMapper.updateEntityFromRequest(proveedor, dto);
+        return proveedorMapper.toResponse(proveedorService.guardar(proveedor));
     }
 
     @PutMapping("/{id}")
     public ProveedorResponseDTO actualizar(@PathVariable Integer id, @RequestBody ProveedorRequestDTO dto) {
         Proveedor proveedor = proveedorService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
-        aplicarCambios(proveedor, dto);
-        return toResponse(proveedorService.guardar(proveedor));
+        proveedorMapper.updateEntityFromRequest(proveedor, dto);
+        return proveedorMapper.toResponse(proveedorService.guardar(proveedor));
     }
 
     @DeleteMapping("/{id}")
@@ -57,20 +60,5 @@ public class ProveedorController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado");
         }
         proveedorService.eliminar(id);
-    }
-
-    private void aplicarCambios(Proveedor proveedor, ProveedorRequestDTO dto) {
-        proveedor.setNombreEmpresa(dto.getNombreEmpresa());
-        proveedor.setTelefono(dto.getTelefono());
-        proveedor.setDireccion(dto.getDireccion());
-    }
-
-    private ProveedorResponseDTO toResponse(Proveedor proveedor) {
-        ProveedorResponseDTO dto = new ProveedorResponseDTO();
-        dto.setProveedorId(proveedor.getProveedorId());
-        dto.setNombreEmpresa(proveedor.getNombreEmpresa());
-        dto.setTelefono(proveedor.getTelefono());
-        dto.setDireccion(proveedor.getDireccion());
-        return dto;
     }
 }

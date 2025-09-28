@@ -1,6 +1,5 @@
 package com.inventa.inventa.controller;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,11 +9,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.inventa.inventa.dto.venta.VentaRequestDTO;
 import com.inventa.inventa.dto.venta.VentaResponseDTO;
-import com.inventa.inventa.entity.Cliente;
-import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.entity.Venta;
-import com.inventa.inventa.service.ClienteService;
-import com.inventa.inventa.service.UsuarioService;
+import com.inventa.inventa.mapper.VentaMapper;
 import com.inventa.inventa.service.VentaService;
 
 @RestController
@@ -22,41 +18,39 @@ import com.inventa.inventa.service.VentaService;
 public class VentaController {
 
     private final VentaService ventaService;
-    private final UsuarioService usuarioService;
-    private final ClienteService clienteService;
+    private final VentaMapper ventaMapper;
 
-    public VentaController(VentaService ventaService, UsuarioService usuarioService, ClienteService clienteService) {
+    public VentaController(VentaService ventaService, VentaMapper ventaMapper) {
         this.ventaService = ventaService;
-        this.usuarioService = usuarioService;
-        this.clienteService = clienteService;
+        this.ventaMapper = ventaMapper;
     }
 
     @GetMapping
     public List<VentaResponseDTO> listar() {
-        return ventaService.listar().stream().map(this::toResponse).collect(Collectors.toList());
+        return ventaService.listar().stream().map(ventaMapper::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public VentaResponseDTO obtenerPorId(@PathVariable Integer id) {
         Venta venta = ventaService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
-        return toResponse(venta);
+        return ventaMapper.toResponse(venta);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResponseDTO crear(@RequestBody VentaRequestDTO dto) {
         Venta venta = new Venta();
-        aplicarCambios(venta, dto, true);
-        return toResponse(ventaService.guardar(venta));
+        ventaMapper.updateEntityFromRequest(venta, dto, true);
+        return ventaMapper.toResponse(ventaService.guardar(venta));
     }
 
     @PutMapping("/{id}")
     public VentaResponseDTO actualizar(@PathVariable Integer id, @RequestBody VentaRequestDTO dto) {
         Venta venta = ventaService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
-        aplicarCambios(venta, dto, false);
-        return toResponse(ventaService.guardar(venta));
+        ventaMapper.updateEntityFromRequest(venta, dto, false);
+        return ventaMapper.toResponse(ventaService.guardar(venta));
     }
 
     @DeleteMapping("/{id}")
@@ -66,48 +60,5 @@ public class VentaController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada");
         }
         ventaService.eliminar(id);
-    }
-
-    private void aplicarCambios(Venta venta, VentaRequestDTO dto, boolean esCreacion) {
-        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        Cliente cliente = clienteService.buscarPorId(dto.getClienteId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
-
-        venta.setUsuario(usuario);
-        venta.setCliente(cliente);
-        venta.setMontoTotal(dto.getMontoTotal());
-        if (dto.getMetodoPago() != null) {
-            venta.setMetodoPago(parseMetodoPago(dto.getMetodoPago()));
-        } else if (esCreacion) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El método de pago es obligatorio");
-        }
-        if (dto.getFechaVenta() != null) {
-            venta.setFechaVenta(dto.getFechaVenta());
-        }
-    }
-
-    private Venta.MetodoPago parseMetodoPago(String metodoPago) {
-        return Arrays.stream(Venta.MetodoPago.values())
-                .filter(valor -> valor.name().equalsIgnoreCase(metodoPago))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Método de pago inválido"));
-    }
-
-    private VentaResponseDTO toResponse(Venta venta) {
-        VentaResponseDTO dto = new VentaResponseDTO();
-        dto.setVentaId(venta.getVentaId());
-        if (venta.getUsuario() != null) {
-            dto.setUsuarioId(venta.getUsuario().getUsuarioId());
-            dto.setUsuarioNombre(venta.getUsuario().getNombreCompleto());
-        }
-        if (venta.getCliente() != null) {
-            dto.setClienteId(venta.getCliente().getClienteId());
-            dto.setClienteNombre(venta.getCliente().getNombreCompleto());
-        }
-        dto.setFechaVenta(venta.getFechaVenta());
-        dto.setMontoTotal(venta.getMontoTotal());
-        dto.setMetodoPago(venta.getMetodoPago() != null ? venta.getMetodoPago().name() : null);
-        return dto;
     }
 }
