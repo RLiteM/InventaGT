@@ -7,4 +7,5 @@ import com.inventa.inventa.entity.AjusteInventario;
 
 @Repository
 public interface AjusteInventarioRepository extends JpaRepository<AjusteInventario, Integer> {
+    
 }
