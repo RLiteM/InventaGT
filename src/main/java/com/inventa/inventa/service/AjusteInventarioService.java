@@ -9,24 +9,33 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.inventa.inventa.dto.ajusteinventario.AjusteInventarioRequestDTO;
 import com.inventa.inventa.entity.AjusteInventario;
 import com.inventa.inventa.entity.AjusteInventario.TipoAjuste;
 import com.inventa.inventa.entity.Lote;
 import com.inventa.inventa.entity.Producto;
+import com.inventa.inventa.entity.Usuario;
+import com.inventa.inventa.mapper.AjusteInventarioMapper;
 import com.inventa.inventa.repository.AjusteInventarioRepository;
-
 
 @Service
 public class AjusteInventarioService {
     private final AjusteInventarioRepository ajusteInventarioRepository;
     private final LoteService loteService;
     private final ProductoService productoService;
+    private final UsuarioService usuarioService;
+    private final AjusteInventarioMapper ajusteInventarioMapper;
 
-    public AjusteInventarioService(AjusteInventarioRepository ajusteInventarioRepository, LoteService loteService,
-            ProductoService productoService) {
+    public AjusteInventarioService(AjusteInventarioRepository ajusteInventarioRepository,
+            LoteService loteService,
+            ProductoService productoService,
+            UsuarioService usuarioService,
+            AjusteInventarioMapper ajusteInventarioMapper) {
         this.ajusteInventarioRepository = ajusteInventarioRepository;
         this.loteService = loteService;
         this.productoService = productoService;
+        this.usuarioService = usuarioService;
+        this.ajusteInventarioMapper = ajusteInventarioMapper;
     }
 
     public List<AjusteInventario> listar() {
@@ -35,6 +44,29 @@ public class AjusteInventarioService {
 
     public Optional<AjusteInventario> buscarPorId(Integer id) {
         return ajusteInventarioRepository.findById(id);
+    }
+
+   
+    @Transactional
+    public AjusteInventario guardarDesdeDto(AjusteInventarioRequestDTO dto) {
+        Lote lote = loteService.buscarPorId(dto.getLoteId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
+        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        AjusteInventario entity = ajusteInventarioMapper.toEntity(dto, lote, usuario);
+        return guardar(entity);
+    }
+
+    @Transactional
+    public AjusteInventario actualizarDesdeDto(Integer id, AjusteInventarioRequestDTO dto) {
+        Lote lote = loteService.buscarPorId(dto.getLoteId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
+        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        AjusteInventario entity = ajusteInventarioMapper.toEntity(dto, lote, usuario);
+        return actualizar(id, entity);
     }
 
     @Transactional
@@ -87,6 +119,7 @@ public class AjusteInventarioService {
         ajusteInventarioRepository.delete(ajuste);
     }
 
+   
     private void validarCantidad(BigDecimal cantidad) {
         if (cantidad == null || cantidad.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cantidad debe ser mayor a cero");

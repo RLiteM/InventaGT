@@ -61,5 +61,5 @@ public class VentaController {
         }
         ventaService.eliminar(id);
     }
-   //hola 
+    // hola
 }

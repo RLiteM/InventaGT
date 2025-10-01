@@ -49,10 +49,10 @@ public class CategoriaController {
 
     // para obtener una categoría por su ID
     @GetMapping("/{id}")
-public CategoriaResponseDTO obtenerPorId(@PathVariable Integer id) {
-    Categoria categoria = categoriaService.buscarPorId(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
-    return categoriaMapper.toResponse(categoria);
-}
+    public CategoriaResponseDTO obtenerPorId(@PathVariable Integer id) {
+        Categoria categoria = categoriaService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
+        return categoriaMapper.toResponse(categoria);
+    }
 
 }
