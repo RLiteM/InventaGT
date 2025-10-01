@@ -1,12 +1,5 @@
 package com.inventa.inventa.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.inventa.inventa.dto.lote.LoteRequestDTO;
 import com.inventa.inventa.dto.lote.LoteResponseDTO;
 import com.inventa.inventa.entity.Lote;
@@ -17,28 +10,36 @@ import com.inventa.inventa.service.LoteService;
 import com.inventa.inventa.service.ProductoService;
 import com.inventa.inventa.service.DetalleCompraService;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
-@RequestMapping("/api/lotes")
+@RequestMapping("/api/lote")
 public class LoteController {
 
     private final LoteService loteService;
-    private final LoteMapper loteMapper;
     private final ProductoService productoService;
     private final DetalleCompraService detalleCompraService;
+    private final LoteMapper loteMapper;
 
-    public LoteController(
-            LoteService loteService,
-            LoteMapper loteMapper,
-            ProductoService productoService,
-            DetalleCompraService detalleCompraService) {
+    public LoteController(LoteService loteService,
+                          ProductoService productoService,
+                          DetalleCompraService detalleCompraService,
+                          LoteMapper loteMapper) {
         this.loteService = loteService;
-        this.loteMapper = loteMapper;
         this.productoService = productoService;
         this.detalleCompraService = detalleCompraService;
+        this.loteMapper = loteMapper;
     }
 
     // =========================
-    // LISTAR TODOS LOS LOTES
+    // LISTAR LOTES
     // =========================
     @GetMapping
     public List<LoteResponseDTO> listar() {
@@ -47,9 +48,6 @@ public class LoteController {
                 .collect(Collectors.toList());
     }
 
-    // =========================
-    // OBTENER LOTE POR ID
-    // =========================
     @GetMapping("/{id}")
     public LoteResponseDTO obtenerPorId(@PathVariable Integer id) {
         Lote lote = loteService.buscarPorId(id)
@@ -58,53 +56,78 @@ public class LoteController {
     }
 
     // =========================
-    // CREAR NUEVO LOTE
+    // CREAR LOTE
     // =========================
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LoteResponseDTO crear(@RequestBody LoteRequestDTO dto) {
+        Lote lote = new Lote();
+
+        // Cargar Producto
         Producto producto = productoService.buscarPorId(dto.getProductoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+        lote.setProducto(producto);
 
+        // Cargar DetalleCompra
         DetalleCompra detalleCompra = detalleCompraService.buscarPorId(dto.getDetalleCompraId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Detalle de compra no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleCompra no encontrado"));
+        lote.setDetalleCompra(detalleCompra);
 
-        Lote lote = loteMapper.toEntity(dto, producto, detalleCompra);
-        return loteMapper.toResponse(loteService.guardar(lote));
+        // Datos del lote
+        lote.setFechaCaducidad(dto.getFechaCaducidad());
+        lote.setCantidadInicial(dto.getCantidadInicial());
+        lote.setCantidadActual(dto.getCantidadActual());
+
+        // Guardar
+        Lote saved = loteService.guardar(lote);
+
+        return loteMapper.toResponse(saved);
     }
 
     // =========================
-    // ACTUALIZAR LOTE EXISTENTE
+    // ACTUALIZAR LOTE
     // =========================
     @PutMapping("/{id}")
     public LoteResponseDTO actualizar(@PathVariable Integer id, @RequestBody LoteRequestDTO dto) {
-        Lote loteExistente = loteService.buscarPorId(id)
+        Lote lote = loteService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
 
+        // Actualizar Producto
         Producto producto = productoService.buscarPorId(dto.getProductoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+        lote.setProducto(producto);
 
+        // Actualizar DetalleCompra
         DetalleCompra detalleCompra = detalleCompraService.buscarPorId(dto.getDetalleCompraId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Detalle de compra no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleCompra no encontrado"));
+        lote.setDetalleCompra(detalleCompra);
 
-        loteExistente.setProducto(producto);
-        loteExistente.setDetalleCompra(detalleCompra);
-        loteExistente.setFechaCaducidad(dto.getFechaCaducidad());
-        loteExistente.setCantidadInicial(dto.getCantidadInicial());
-        loteExistente.setCantidadActual(dto.getCantidadActual());
+        // Actualizar datos
+        lote.setFechaCaducidad(dto.getFechaCaducidad());
+        lote.setCantidadInicial(dto.getCantidadInicial());
+        lote.setCantidadActual(dto.getCantidadActual());
 
-        return loteMapper.toResponse(loteService.guardar(loteExistente));
+        Lote updated = loteService.guardar(lote);
+
+        return loteMapper.toResponse(updated);
     }
 
     // =========================
     // ELIMINAR LOTE
     // =========================
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Integer id) {
-        Lote lote = loteService.buscarPorId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
-        loteService.eliminar(lote);
+    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+        return loteService.buscarPorId(id)
+                .map(lote -> {
+                    try {
+                        loteService.eliminarPorId(id);
+                        return ResponseEntity.noContent().build(); // 204 si se eliminó
+                    } catch (DataIntegrityViolationException e) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT)
+                                .body("{\"error\": \"El lote está en uso y no puede eliminarse\"}");
+                    }
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("{\"error\": \"Lote no encontrado\"}"));
     }
 }
-

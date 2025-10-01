@@ -26,7 +26,7 @@ public class TokenRecuperacionService {
     // GENERAR TOKEN NUEVO
     // =========================
     public TokenRecuperacion generarToken(Usuario usuario) {
-        // Eliminar tokens anteriores
+        // Eliminar tokens anteriores de ese usuario
         tokenRepo.deleteByUsuario(usuario);
 
         TokenRecuperacion token = new TokenRecuperacion();
@@ -69,4 +69,12 @@ public class TokenRecuperacionService {
     public Optional<Usuario> obtenerUsuarioPorId(Integer usuarioId) {
         return usuarioService.buscarPorId(usuarioId);
     }
+
+    // =========================
+    // ELIMINAR POR ID
+    // =========================
+    public void eliminar(Integer id) {
+        tokenRepo.deleteById(id);
+    }
 }
+

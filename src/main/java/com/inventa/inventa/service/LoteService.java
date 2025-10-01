@@ -3,6 +3,7 @@ package com.inventa.inventa.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.inventa.inventa.entity.Lote;
@@ -32,8 +33,12 @@ public class LoteService {
         return loteRepository.save(lote);
     }
 
-    // Eliminar un lote
-    public void eliminar(Lote lote) {
-        loteRepository.delete(lote);
+    // Eliminar lote por ID
+    public void eliminarPorId(Integer id) {
+        try {
+            loteRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw e; // Lo maneja el controller
+        }
     }
 }

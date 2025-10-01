@@ -56,5 +56,10 @@ public class TokenRecuperacionController {
         }
         tokenService.marcarComoUsado(token);
     }
-}
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable Integer id) {
+        tokenService.eliminar(id);
+    }
+}
