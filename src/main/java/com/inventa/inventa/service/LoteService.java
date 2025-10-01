@@ -17,15 +17,23 @@ public class LoteService {
         this.loteRepository = loteRepository;
     }
 
+    // Listar todos los lotes
     public List<Lote> listar() {
         return loteRepository.findAll();
     }
 
+    // Buscar lote por ID
     public Optional<Lote> buscarPorId(Integer id) {
         return loteRepository.findById(id);
     }
 
+    // Guardar o actualizar un lote
     public Lote guardar(Lote lote) {
         return loteRepository.save(lote);
+    }
+
+    // Eliminar un lote
+    public void eliminar(Lote lote) {
+        loteRepository.delete(lote);
     }
 }

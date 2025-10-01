@@ -7,6 +7,7 @@ import com.inventa.inventa.repository.TokenRecuperacionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,35 +15,39 @@ import java.util.UUID;
 public class TokenRecuperacionService {
 
     private final TokenRecuperacionRepository tokenRepo;
+    private final UsuarioService usuarioService;
 
-    public TokenRecuperacionService(TokenRecuperacionRepository tokenRepo) {
+    public TokenRecuperacionService(TokenRecuperacionRepository tokenRepo, UsuarioService usuarioService) {
         this.tokenRepo = tokenRepo;
+        this.usuarioService = usuarioService;
     }
 
-    // Generar un nuevo token y guardarlo
+    // =========================
+    // GENERAR TOKEN NUEVO
+    // =========================
     public TokenRecuperacion generarToken(Usuario usuario) {
-        // Antes de guardar uno nuevo, eliminamos los anteriores de este usuario
+        // Eliminar tokens anteriores
         tokenRepo.deleteByUsuario(usuario);
 
         TokenRecuperacion token = new TokenRecuperacion();
         token.setUsuario(usuario);
-        token.setToken(UUID.randomUUID().toString()); // Genera token único
-        token.setFechaExpiracion(LocalDateTime.now().plusHours(1)); // Expira en 1 hora
-        token.setUsado(0); // 0 = no usado
+        token.setToken(UUID.randomUUID().toString());
+        token.setFechaExpiracion(LocalDateTime.now().plusHours(1));
+        token.setUsado(0);
 
         return tokenRepo.save(token);
     }
 
-    // Validar un token
+    // =========================
+    // VALIDAR Y MARCAR USO
+    // =========================
     public boolean validarToken(String tokenStr) {
         Optional<TokenRecuperacion> tokenOpt = tokenRepo.findByToken(tokenStr);
-
         return tokenOpt.isPresent() &&
                tokenOpt.get().getUsado() == 0 &&
                tokenOpt.get().getFechaExpiracion().isAfter(LocalDateTime.now());
     }
 
-    // Marcar token como usado
     public void marcarComoUsado(String tokenStr) {
         tokenRepo.findByToken(tokenStr).ifPresent(t -> {
             t.setUsado(1);
@@ -50,5 +55,18 @@ public class TokenRecuperacionService {
         });
     }
 
+    // =========================
+    // MÉTODOS AUXILIARES
+    // =========================
+    public Optional<TokenRecuperacion> buscarPorToken(String token) {
+        return tokenRepo.findByToken(token);
+    }
 
+    public List<TokenRecuperacion> listar() {
+        return tokenRepo.findAll();
+    }
+
+    public Optional<Usuario> obtenerUsuarioPorId(Integer usuarioId) {
+        return usuarioService.buscarPorId(usuarioId);
+    }
 }
