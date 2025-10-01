@@ -2,6 +2,7 @@ package com.inventa.inventa.service;
 
 import com.inventa.inventa.entity.DetalleCompra;
 import com.inventa.inventa.repository.DetalleCompraRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,9 +32,8 @@ public class DetalleCompraService {
         return detalleCompraRepository.save(detalle);
     }
 
-    // Eliminar un detalle por ID
-    public void eliminar(Integer id) {
-        detalleCompraRepository.deleteById(id);
+    // Eliminar un detalle por entidad
+    public void eliminar(DetalleCompra detalle) throws DataIntegrityViolationException {
+        detalleCompraRepository.delete(detalle);
     }
 }
-

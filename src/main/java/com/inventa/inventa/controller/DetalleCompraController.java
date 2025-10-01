@@ -1,8 +1,6 @@
 package com.inventa.inventa.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -12,6 +10,9 @@ import com.inventa.inventa.dto.detallecompra.DetalleCompraResponseDTO;
 import com.inventa.inventa.entity.DetalleCompra;
 import com.inventa.inventa.mapper.DetalleCompraMapper;
 import com.inventa.inventa.service.DetalleCompraService;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/detallecompra")
@@ -26,6 +27,9 @@ public class DetalleCompraController {
         this.detalleCompraMapper = detalleCompraMapper;
     }
 
+    // =========================
+    // LISTAR TODOS LOS DETALLES
+    // =========================
     @GetMapping
     public List<DetalleCompraResponseDTO> listar() {
         return detalleCompraService.listar().stream()
@@ -33,6 +37,9 @@ public class DetalleCompraController {
                 .collect(Collectors.toList());
     }
 
+    // =========================
+    // OBTENER DETALLE POR ID
+    // =========================
     @GetMapping("/{id}")
     public DetalleCompraResponseDTO obtenerPorId(@PathVariable Integer id) {
         DetalleCompra detalle = detalleCompraService.buscarPorId(id)
@@ -40,28 +47,48 @@ public class DetalleCompraController {
         return detalleCompraMapper.toResponse(detalle);
     }
 
+    // =========================
+    // CREAR NUEVO DETALLE
+    // =========================
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public DetalleCompraResponseDTO crear(@RequestBody DetalleCompraRequestDTO dto) {
         DetalleCompra detalle = new DetalleCompra();
         detalleCompraMapper.updateEntityFromRequest(detalle, dto);
+
+        // Calcular subtotal automáticamente
+        detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getCostoUnitarioCompra()));
+
         return detalleCompraMapper.toResponse(detalleCompraService.guardar(detalle));
     }
 
+    // =========================
+    // ACTUALIZAR DETALLE
+    // =========================
     @PutMapping("/{id}")
     public DetalleCompraResponseDTO actualizar(@PathVariable Integer id, @RequestBody DetalleCompraRequestDTO dto) {
         DetalleCompra detalle = detalleCompraService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleCompra no encontrado"));
         detalleCompraMapper.updateEntityFromRequest(detalle, dto);
+
+        // Recalcular subtotal
+        detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getCostoUnitarioCompra()));
+
         return detalleCompraMapper.toResponse(detalleCompraService.guardar(detalle));
     }
 
+    // =========================
+    // ELIMINAR DETALLE
+    // =========================
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Integer id) {
-        if (detalleCompraService.buscarPorId(id).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleCompra no encontrado");
+        DetalleCompra detalle = detalleCompraService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleCompra no encontrado"));
+        try {
+            detalleCompraService.eliminar(detalle);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se puede eliminar detalleCompra por restricciones de FK");
         }
-        detalleCompraService.eliminar(id);
     }
 }
