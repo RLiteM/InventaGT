@@ -61,4 +61,14 @@ public class ClienteController {
         }
         clienteService.eliminar(id);
     }
+
+    @GetMapping("/identificacion/{identificacion}")
+    public ClienteResponseDTO obtenerPorIdentificacionFiscal(@PathVariable String identificacion) {
+        Cliente cliente = clienteService.buscarPorIdentificacionFiscal(identificacion);
+        if (cliente == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Cliente no encontrado con esa identificación fiscal");
+        }
+        return clienteMapper.toResponse(cliente);
+    }
 }
