@@ -30,4 +30,8 @@ public class ProveedorService {
     public void eliminar(Integer id) {
         proveedorRepository.deleteById(id);
     }
+
+    public Proveedor buscarPorTelefono(String telefono) {
+        return proveedorRepository.findByTelefono(telefono);
+    }
 }

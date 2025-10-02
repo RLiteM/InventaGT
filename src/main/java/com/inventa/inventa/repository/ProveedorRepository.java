@@ -7,4 +7,5 @@ import com.inventa.inventa.entity.Proveedor;
 
 @Repository
 public interface ProveedorRepository extends JpaRepository<Proveedor, Integer> {
+    Proveedor findByTelefono(String telefono);
 }
