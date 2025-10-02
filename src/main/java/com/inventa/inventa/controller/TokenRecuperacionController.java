@@ -37,9 +37,21 @@ public class TokenRecuperacionController {
     }
 
     // =========================
+    // OBTENER TOKEN POR ID
+    // =========================
+    @GetMapping("/id/{id}")
+    public TokenRecuperacionResponseDTO obtenerPorId(@PathVariable Integer id) {
+        TokenRecuperacion tokenRec = tokenService.listar().stream()
+                .filter(t -> t.getTokenId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no encontrado"));
+        return tokenMapper.toResponse(tokenRec);
+    }
+
+    // =========================
     // OBTENER TOKEN POR TOKEN STRING
     // =========================
-    @GetMapping("/{token}")
+    @GetMapping("/token/{token}")
     public TokenRecuperacionResponseDTO obtenerPorToken(@PathVariable String token) {
         TokenRecuperacion tokenRec = tokenService.buscarPorToken(token)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no encontrado"));
