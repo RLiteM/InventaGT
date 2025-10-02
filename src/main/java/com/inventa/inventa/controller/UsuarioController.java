@@ -71,7 +71,7 @@ public class UsuarioController {
         return usuarioMapper.toResponse(usuario);
     }
 
-    @GetMapping("/cuiDpi/{cuiDpi}")
+    @GetMapping("/cui-dpi/{cuiDpi}")
     public UsuarioResponseDTO obtenerPorCuiDpi(@PathVariable String cuiDpi) {
         Usuario usuario = usuarioService.buscarPorCuiDpi(cuiDpi);
         if (usuario == null) {
