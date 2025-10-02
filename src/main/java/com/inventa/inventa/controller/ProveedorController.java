@@ -61,4 +61,13 @@ public class ProveedorController {
         }
         proveedorService.eliminar(id);
     }
+
+    @GetMapping("/telefono/{telefono}")
+    public ProveedorResponseDTO obtenerPorTelefono(@PathVariable String telefono) {
+        Proveedor proveedor = proveedorService.buscarPorTelefono(telefono);
+        if (proveedor == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado con ese teléfono");
+        }
+        return proveedorMapper.toResponse(proveedor);
+    }
 }
