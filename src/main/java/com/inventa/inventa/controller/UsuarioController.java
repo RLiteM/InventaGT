@@ -70,4 +70,13 @@ public class UsuarioController {
         }
         return usuarioMapper.toResponse(usuario);
     }
+
+    @GetMapping("/cui/{cuiDpi}")
+    public UsuarioResponseDTO obtenerPorCuiDpi(@PathVariable String cuiDpi) {
+        Usuario usuario = usuarioService.buscarPorCuiDpi(cuiDpi);
+        if (usuario == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con ese CUI/DPI");
+        }
+        return usuarioMapper.toResponse(usuario);
+    }
 }
