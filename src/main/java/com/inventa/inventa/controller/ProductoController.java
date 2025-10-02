@@ -61,4 +61,13 @@ public class ProductoController {
         }
         productoService.eliminar(id);
     }
+
+    @GetMapping("/sku/{sku}")
+    public ProductoResponseDTO obtenerPorSku(@PathVariable String sku) {
+        Producto producto = productoService.buscarPorSku(sku);
+        if (producto == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con ese SKU");
+        }
+        return productoMapper.toResponse(producto);
+    }
 }
