@@ -3,6 +3,7 @@ package com.inventa.inventa.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,6 +26,9 @@ public class TokenRecuperacionController {
         this.tokenMapper = tokenMapper;
     }
 
+    // =========================
+    // LISTAR TODOS LOS TOKENS
+    // =========================
     @GetMapping
     public List<TokenRecuperacionResponseDTO> listar() {
         return tokenService.listar().stream()
@@ -32,6 +36,9 @@ public class TokenRecuperacionController {
                 .collect(Collectors.toList());
     }
 
+    // =========================
+    // OBTENER TOKEN POR TOKEN STRING
+    // =========================
     @GetMapping("/{token}")
     public TokenRecuperacionResponseDTO obtenerPorToken(@PathVariable String token) {
         TokenRecuperacion tokenRec = tokenService.buscarPorToken(token)
@@ -39,6 +46,9 @@ public class TokenRecuperacionController {
         return tokenMapper.toResponse(tokenRec);
     }
 
+    // =========================
+    // CREAR TOKEN NUEVO
+    // =========================
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TokenRecuperacionResponseDTO crear(@RequestBody TokenRecuperacionRequestDTO dto) {
@@ -49,6 +59,9 @@ public class TokenRecuperacionController {
         return tokenMapper.toResponse(token);
     }
 
+    // =========================
+    // MARCAR TOKEN COMO USADO
+    // =========================
     @PutMapping("/usar/{token}")
     public void marcarComoUsado(@PathVariable String token) {
         if (!tokenService.validarToken(token)) {
@@ -57,9 +70,16 @@ public class TokenRecuperacionController {
         tokenService.marcarComoUsado(token);
     }
 
+    // =========================
+    // ELIMINAR TOKEN POR ID
+    // =========================
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Integer id) {
-        tokenService.eliminar(id);
+    public void eliminarToken(@PathVariable Integer id) {
+        try {
+            tokenService.eliminar(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se puede eliminar token por restricciones de FK");
+        }
     }
 }

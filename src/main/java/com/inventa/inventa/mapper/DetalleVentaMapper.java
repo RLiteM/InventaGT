@@ -7,7 +7,6 @@ import com.inventa.inventa.entity.Lote;
 import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.entity.Venta;
 import com.inventa.inventa.repository.LoteRepository;
-import com.inventa.inventa.repository.ProductoRepository;
 import com.inventa.inventa.repository.VentaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -18,16 +17,14 @@ public class DetalleVentaMapper {
 
     private final VentaRepository ventaRepository;
     private final LoteRepository loteRepository;
-    private final ProductoRepository productoRepository;
 
     public DetalleVentaMapper(VentaRepository ventaRepository,
-                              LoteRepository loteRepository,
-                              ProductoRepository productoRepository) {
+                              LoteRepository loteRepository) {
         this.ventaRepository = ventaRepository;
         this.loteRepository = loteRepository;
-        this.productoRepository = productoRepository;
     }
 
+    // Actualiza la entidad a partir del DTO
     public void updateEntityFromRequest(DetalleVenta detalle, DetalleVentaRequestDTO dto) {
         Venta venta = ventaRepository.findById(dto.getVentaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
@@ -41,6 +38,7 @@ public class DetalleVentaMapper {
         detalle.setSubtotal(dto.getSubtotal());
     }
 
+    // Convierte la entidad a DTO de respuesta
     public DetalleVentaResponseDTO toResponse(DetalleVenta detalle) {
         DetalleVentaResponseDTO dto = new DetalleVentaResponseDTO();
         dto.setDetalleId(detalle.getDetalleId());
@@ -48,8 +46,10 @@ public class DetalleVentaMapper {
         if (detalle.getVenta() != null) {
             dto.setVentaId(detalle.getVenta().getVentaId());
         }
+
         if (detalle.getLote() != null) {
             dto.setLoteId(detalle.getLote().getLoteId());
+
             // Obtenemos el producto asociado al lote
             Producto producto = detalle.getLote().getProducto();
             if (producto != null) {
@@ -57,9 +57,11 @@ public class DetalleVentaMapper {
                 dto.setProductoNombre(producto.getNombre());
             }
         }
+
         dto.setCantidad(detalle.getCantidad());
         dto.setPrecioUnitarioVenta(detalle.getPrecioUnitarioVenta());
         dto.setSubtotal(detalle.getSubtotal());
+
         return dto;
     }
 }

@@ -3,8 +3,10 @@ package com.inventa.inventa.service;
 import com.inventa.inventa.entity.TokenRecuperacion;
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.repository.TokenRecuperacionRepository;
-
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,7 +28,6 @@ public class TokenRecuperacionService {
     // GENERAR TOKEN NUEVO
     // =========================
     public TokenRecuperacion generarToken(Usuario usuario) {
-        // Eliminar tokens anteriores de ese usuario
         tokenRepo.deleteByUsuario(usuario);
 
         TokenRecuperacion token = new TokenRecuperacion();
@@ -73,8 +74,9 @@ public class TokenRecuperacionService {
     // =========================
     // ELIMINAR POR ID
     // =========================
-    public void eliminar(Integer id) {
-        tokenRepo.deleteById(id);
+    public void eliminar(Integer id) throws DataIntegrityViolationException {
+        TokenRecuperacion token = tokenRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no encontrado"));
+        tokenRepo.delete(token);
     }
 }
-
