@@ -34,4 +34,8 @@ public class UsuarioService {
     public Usuario buscarPorNombreUsuario(String nombreUsuario) {
         return usuarioRepository.findByNombreUsuario(nombreUsuario);
     }
+
+    public Usuario buscarPorCuiDpi(String cuiDpi) {
+        return usuarioRepository.findByCuiDpi(cuiDpi);
+    }
 }
