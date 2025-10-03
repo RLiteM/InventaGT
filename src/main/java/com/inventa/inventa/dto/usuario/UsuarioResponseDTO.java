@@ -1,7 +1,6 @@
 package com.inventa.inventa.dto.usuario;
 
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 @Data

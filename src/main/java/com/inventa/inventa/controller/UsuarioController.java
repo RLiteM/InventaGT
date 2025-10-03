@@ -61,22 +61,4 @@ public class UsuarioController {
         }
         usuarioService.eliminar(id);
     }
-
-    @GetMapping("/nombre/{nombreUsuario}")
-    public UsuarioResponseDTO obtenerPorNombreUsuario(@PathVariable String nombreUsuario) {
-        Usuario usuario = usuarioService.buscarPorNombreUsuario(nombreUsuario);
-        if (usuario == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con ese nombre de usuario");
-        }
-        return usuarioMapper.toResponse(usuario);
-    }
-
-    @GetMapping("/cui-dpi/{cuiDpi}")
-    public UsuarioResponseDTO obtenerPorCuiDpi(@PathVariable String cuiDpi) {
-        Usuario usuario = usuarioService.buscarPorCuiDpi(cuiDpi);
-        if (usuario == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con ese CUI/DPI");
-        }
-        return usuarioMapper.toResponse(usuario);
-    }
 }
