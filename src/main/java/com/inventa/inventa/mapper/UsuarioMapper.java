@@ -28,7 +28,7 @@ public class UsuarioMapper {
         usuario.setNombreUsuario(dto.getNombreUsuario());
 
         if (esCreacion || (dto.getContrasena() != null && !dto.getContrasena().isBlank())) {
-            usuario.setContrasena(passwordEncoder.encode(dto.getContrasena())); // ✅ Hash con BCrypt
+            usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
         }
 
         if (dto.getRolId() != null) {

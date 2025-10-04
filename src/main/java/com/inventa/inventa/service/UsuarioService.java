@@ -3,7 +3,6 @@ package com.inventa.inventa.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
-
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.repository.UsuarioRepository;
 
@@ -31,11 +30,11 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    public Usuario buscarPorNombreUsuario(String nombreUsuario) {
+    public Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario) {
         return usuarioRepository.findByNombreUsuario(nombreUsuario);
     }
 
-    public Usuario buscarPorCuiDpi(String cuiDpi) {
+    public Optional<Usuario> buscarPorCuiDpi(String cuiDpi) {
         return usuarioRepository.findByCuiDpi(cuiDpi);
     }
 }
