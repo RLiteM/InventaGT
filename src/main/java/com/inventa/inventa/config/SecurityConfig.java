@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -27,6 +28,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Reglas para Administrador: Control total sobre entidades clave
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**", "/api/ajustes-inventario/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAuthority("ADMIN")
+                        // Cualquier otra petición solo necesita autenticación
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

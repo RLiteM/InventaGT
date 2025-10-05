@@ -15,7 +15,7 @@ public class UsuarioService {
     }
 
     public List<Usuario> listar() {
-        return usuarioRepository.findAll();
+        return usuarioRepository.findAllWithRol();
     }
 
     public Optional<Usuario> buscarPorId(Integer id) {
