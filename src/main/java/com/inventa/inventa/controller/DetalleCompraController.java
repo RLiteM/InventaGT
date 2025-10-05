@@ -48,36 +48,6 @@ public class DetalleCompraController {
     }
 
     // =========================
-    // CREAR NUEVO DETALLE
-    // =========================
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public DetalleCompraResponseDTO crear(@RequestBody DetalleCompraRequestDTO dto) {
-        DetalleCompra detalle = new DetalleCompra();
-        detalleCompraMapper.updateEntityFromRequest(detalle, dto);
-
-        // Calcular subtotal automáticamente
-        detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getCostoUnitarioCompra()));
-
-        return detalleCompraMapper.toResponse(detalleCompraService.guardar(detalle));
-    }
-
-    // =========================
-    // ACTUALIZAR DETALLE
-    // =========================
-    @PutMapping("/{id}")
-    public DetalleCompraResponseDTO actualizar(@PathVariable Integer id, @RequestBody DetalleCompraRequestDTO dto) {
-        DetalleCompra detalle = detalleCompraService.buscarPorId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleCompra no encontrado"));
-        detalleCompraMapper.updateEntityFromRequest(detalle, dto);
-
-        // Recalcular subtotal
-        detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getCostoUnitarioCompra()));
-
-        return detalleCompraMapper.toResponse(detalleCompraService.guardar(detalle));
-    }
-
-    // =========================
     // ELIMINAR DETALLE
     // =========================
     @DeleteMapping("/{id}")

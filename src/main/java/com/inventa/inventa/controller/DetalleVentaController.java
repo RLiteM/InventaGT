@@ -47,36 +47,6 @@ public class DetalleVentaController {
     }
 
     // =========================
-    // CREAR
-    // =========================
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public DetalleVentaResponseDTO crear(@RequestBody DetalleVentaRequestDTO dto) {
-        DetalleVenta detalle = new DetalleVenta();
-        detalleVentaMapper.updateEntityFromRequest(detalle, dto);
-
-        // Calcular subtotal automáticamente
-        detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getPrecioUnitarioVenta()));
-
-        return detalleVentaMapper.toResponse(detalleVentaService.guardar(detalle));
-    }
-
-    // =========================
-    // ACTUALIZAR
-    // =========================
-    @PutMapping("/{id}")
-    public DetalleVentaResponseDTO actualizar(@PathVariable Integer id, @RequestBody DetalleVentaRequestDTO dto) {
-        DetalleVenta detalle = detalleVentaService.buscarPorId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DetalleVenta no encontrado"));
-        detalleVentaMapper.updateEntityFromRequest(detalle, dto);
-
-        // Recalcular subtotal
-        detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getPrecioUnitarioVenta()));
-
-        return detalleVentaMapper.toResponse(detalleVentaService.guardar(detalle));
-    }
-
-    // =========================
     // ELIMINAR
     // =========================
     @DeleteMapping("/{id}")

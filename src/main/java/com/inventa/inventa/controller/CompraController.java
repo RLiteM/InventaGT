@@ -40,9 +40,8 @@ public class CompraController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompraResponseDTO crear(@RequestBody CompraRequestDTO dto) {
-        Compra compra = new Compra();
-        compraMapper.updateEntityFromRequest(compra, dto);
-        return compraMapper.toResponse(compraService.guardar(compra));
+        Compra compraGuardada = compraService.crearCompraCompleta(dto);
+        return compraMapper.toResponse(compraGuardada);
     }
 
     @PutMapping("/{id}")

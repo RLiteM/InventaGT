@@ -24,20 +24,6 @@ public class DetalleVentaMapper {
         this.loteRepository = loteRepository;
     }
 
-    // Actualiza la entidad a partir del DTO
-    public void updateEntityFromRequest(DetalleVenta detalle, DetalleVentaRequestDTO dto) {
-        Venta venta = ventaRepository.findById(dto.getVentaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
-        Lote lote = loteRepository.findById(dto.getLoteId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
-
-        detalle.setVenta(venta);
-        detalle.setLote(lote);
-        detalle.setCantidad(dto.getCantidad());
-        detalle.setPrecioUnitarioVenta(dto.getPrecioUnitarioVenta());
-        detalle.setSubtotal(dto.getSubtotal());
-    }
-
     // Convierte la entidad a DTO de respuesta
     public DetalleVentaResponseDTO toResponse(DetalleVenta detalle) {
         DetalleVentaResponseDTO dto = new DetalleVentaResponseDTO();

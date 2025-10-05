@@ -40,9 +40,8 @@ public class VentaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResponseDTO crear(@RequestBody VentaRequestDTO dto) {
-        Venta venta = new Venta();
-        ventaMapper.updateEntityFromRequest(venta, dto, true);
-        return ventaMapper.toResponse(ventaService.guardar(venta));
+        Venta ventaGuardada = ventaService.crearVentaCompleta(dto);
+        return ventaMapper.toResponse(ventaGuardada);
     }
 
     @PutMapping("/{id}")

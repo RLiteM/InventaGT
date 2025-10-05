@@ -23,19 +23,6 @@ public class DetalleCompraMapper {
         this.productoRepository = productoRepository;
     }
 
-    public void updateEntityFromRequest(DetalleCompra detalle, DetalleCompraRequestDTO dto) {
-        Compra compra = compraRepository.findById(dto.getCompraId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
-        Producto producto = productoRepository.findById(dto.getProductoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
-
-        detalle.setCompra(compra);
-        detalle.setProducto(producto);
-        detalle.setCantidad(dto.getCantidad());
-        detalle.setCostoUnitarioCompra(dto.getCostoUnitarioCompra());
-        detalle.setSubtotal(dto.getSubtotal());
-    }
-
     public DetalleCompraResponseDTO toResponse(DetalleCompra detalle) {
         DetalleCompraResponseDTO dto = new DetalleCompraResponseDTO();
         dto.setDetalleCompraId(detalle.getDetalleCompraId());
