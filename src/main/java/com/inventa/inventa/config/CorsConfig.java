@@ -13,14 +13,10 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins(
-                                "http://localhost:5173",   // tu app React local
-                                "https://inventagt-production.up.railway.app" // API en producción
-                        )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
+                registry.addMapping("/api/**")
+                        .allowedOrigins("*") // Permite cualquier origen
+                        .allowedMethods("*") // Permite cualquier método (GET, POST, PUT, etc.)
+                        .allowedHeaders("*"); // Permite cualquier cabecera
             }
         };
     }
