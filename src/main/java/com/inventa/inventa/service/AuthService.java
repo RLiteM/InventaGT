@@ -4,35 +4,40 @@ import com.inventa.inventa.dto.usuario.LoginRequestDTO;
 import com.inventa.inventa.dto.usuario.LoginResponseDTO;
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.repository.UsuarioRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
+
     private final UsuarioRepository usuarioRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
-    }
+    public LoginResponseDTO login(LoginRequestDTO request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getNombreUsuario(),
+                        request.getContrasena()
+                )
+        );
 
-    public LoginResponseDTO login(LoginRequestDTO loginRequest) {
-        Usuario usuario = usuarioRepository.findByNombreUsuario(loginRequest.getNombreUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = usuarioRepository.findByNombreUsuario(request.getNombreUsuario())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado tras una autenticación exitosa"));
 
-        if (!passwordEncoder.matches(loginRequest.getContrasena(), usuario.getContrasena())) {
-            throw new RuntimeException("Contraseña incorrecta");
-        }
+        String jwtToken = jwtService.generateToken(usuario);
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setUsuarioId(usuario.getUsuarioId());
         response.setNombreCompleto(usuario.getNombreCompleto());
         response.setRol(usuario.getRol().getNombreRol());
         response.setMensaje("Login exitoso");
-        return response;
-    }
+        response.setToken(jwtToken);
 
-    public String hashPassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
+        return response;
     }
 }
