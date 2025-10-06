@@ -28,12 +28,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/roles").permitAll()
-                        // Reglas para Administrador: Control total sobre entidades clave
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**", "/api/ajustes-inventario/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("ADMINISTRADOR")
-                        // Cualquier otra petición solo necesita autenticación
+                        // Reglas específicas para Administrador
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/ventas/**").hasRole("ADMINISTRADOR")
+                        // Cualquier otra petición solo necesita que el usuario esté autenticado
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

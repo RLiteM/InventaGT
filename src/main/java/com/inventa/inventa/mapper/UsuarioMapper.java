@@ -43,6 +43,30 @@ public class UsuarioMapper {
         usuario.setTelefono(dto.getTelefono());
     }
 
+    public Usuario toEntity(UsuarioRequestDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setNombreCompleto(dto.getNombreCompleto());
+        usuario.setCuiDpi(dto.getCuiDpi());
+        usuario.setNombreUsuario(dto.getNombreUsuario());
+        usuario.setContrasena(dto.getContrasena()); // La codificación se hace en el servicio
+        usuario.setCorreo(dto.getCorreo());
+        usuario.setTelefono(dto.getTelefono());
+
+        if (dto.getRolId() != null) {
+            Rol rol = rolService.buscarPorId(dto.getRolId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rol no encontrado"));
+            usuario.setRol(rol);
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El rol es obligatorio para crear un usuario");
+        }
+
+        return usuario;
+    }
+
     public UsuarioResponseDTO toResponse(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
         dto.setUsuarioId(usuario.getUsuarioId());

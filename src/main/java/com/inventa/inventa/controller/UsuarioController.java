@@ -1,33 +1,33 @@
 package com.inventa.inventa.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.inventa.inventa.dto.usuario.UsuarioRequestDTO;
 import com.inventa.inventa.dto.usuario.UsuarioResponseDTO;
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.mapper.UsuarioMapper;
 import com.inventa.inventa.service.UsuarioService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final UsuarioMapper usuarioMapper;
 
-    public UsuarioController(UsuarioService usuarioService, UsuarioMapper usuarioMapper) {
-        this.usuarioService = usuarioService;
-        this.usuarioMapper = usuarioMapper;
-    }
-
     @GetMapping
     public List<UsuarioResponseDTO> listar() {
-        return usuarioService.listar().stream().map(usuarioMapper::toResponse).collect(Collectors.toList());
+        return usuarioService.listar().stream()
+                .map(usuarioMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -40,25 +40,19 @@ public class UsuarioController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UsuarioResponseDTO crear(@RequestBody UsuarioRequestDTO dto) {
-        Usuario usuario = new Usuario();
-        usuarioMapper.updateEntityFromRequest(usuario, dto, true);
-        return usuarioMapper.toResponse(usuarioService.guardar(usuario));
+        Usuario nuevoUsuario = usuarioMapper.toEntity(dto);
+        return usuarioMapper.toResponse(usuarioService.guardar(nuevoUsuario));
     }
 
     @PutMapping("/{id}")
-    public UsuarioResponseDTO actualizar(@PathVariable Integer id, @RequestBody UsuarioRequestDTO dto) {
-        Usuario usuario = usuarioService.buscarPorId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        usuarioMapper.updateEntityFromRequest(usuario, dto, false);
-        return usuarioMapper.toResponse(usuarioService.guardar(usuario));
+    public UsuarioResponseDTO actualizar(@PathVariable Integer id, @RequestBody UsuarioRequestDTO dto, @AuthenticationPrincipal Usuario currentUser) {
+        Usuario usuarioActualizado = usuarioService.actualizarUsuario(id, dto, currentUser);
+        return usuarioMapper.toResponse(usuarioActualizado);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Integer id) {
-        if (usuarioService.buscarPorId(id).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
-        }
         usuarioService.eliminar(id);
     }
 }
