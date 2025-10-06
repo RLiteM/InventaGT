@@ -1,7 +1,7 @@
 package com.inventa.inventa.controller;
 
 import com.inventa.inventa.dto.proveedor.ProveedorConContactosRequestDTO;
-import com.inventa.inventa.dto.proveedor.ProveedorRequestDTO;
+import com.inventa.inventa.dto.proveedor.ProveedorConContactosUpdateDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorResponseDTO;
 import com.inventa.inventa.entity.Proveedor;
 import com.inventa.inventa.mapper.ProveedorMapper;
@@ -45,11 +45,9 @@ public class ProveedorController {
     }
 
     @PutMapping("/{id}")
-    public ProveedorResponseDTO actualizar(@PathVariable Integer id, @RequestBody ProveedorRequestDTO dto) {
-        Proveedor proveedor = proveedorService.buscarPorId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
-        proveedorMapper.updateEntityFromRequest(proveedor, dto);
-        return proveedorMapper.toResponse(proveedorService.guardar(proveedor));
+    public ProveedorResponseDTO actualizar(@PathVariable Integer id, @RequestBody ProveedorConContactosUpdateDTO dto) {
+        Proveedor proveedorActualizado = proveedorService.actualizarProveedorConContactos(id, dto);
+        return proveedorMapper.toResponse(proveedorActualizado);
     }
 
     @DeleteMapping("/{id}")
