@@ -1,17 +1,17 @@
 package com.inventa.inventa.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
+import com.inventa.inventa.dto.proveedor.ProveedorConContactosRequestDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorRequestDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorResponseDTO;
 import com.inventa.inventa.entity.Proveedor;
 import com.inventa.inventa.mapper.ProveedorMapper;
 import com.inventa.inventa.service.ProveedorService;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/proveedores")
@@ -39,10 +39,9 @@ public class ProveedorController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProveedorResponseDTO crear(@RequestBody ProveedorRequestDTO dto) {
-        Proveedor proveedor = new Proveedor();
-        proveedorMapper.updateEntityFromRequest(proveedor, dto);
-        return proveedorMapper.toResponse(proveedorService.guardar(proveedor));
+    public ProveedorResponseDTO crear(@RequestBody ProveedorConContactosRequestDTO dto) {
+        Proveedor proveedorGuardado = proveedorService.crearProveedorConContactos(dto);
+        return proveedorMapper.toResponse(proveedorGuardado);
     }
 
     @PutMapping("/{id}")
