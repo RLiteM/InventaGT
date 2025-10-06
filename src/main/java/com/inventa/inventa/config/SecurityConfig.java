@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/roles").permitAll()
                         // Reglas para Administrador: Control total sobre entidades clave
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**", "/api/ajustes-inventario/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasRole("ADMINISTRADOR")
