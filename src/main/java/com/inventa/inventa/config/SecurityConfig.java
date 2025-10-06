@@ -29,10 +29,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         // Reglas para Administrador: Control total sobre entidades clave
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**", "/api/ajustes-inventario/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**", "/api/ajustes-inventario/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**", "/api/proveedores/**", "/api/compras/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("ADMIN")
                         // Cualquier otra petición solo necesita autenticación
                         .anyRequest().authenticated()
                 )

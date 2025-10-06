@@ -51,7 +51,8 @@ public class Usuario implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(rol.getNombreRol()));
+        // Añadimos el prefijo "ROLE_" y convertimos a mayúsculas para seguir la convención de Spring Security
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.getNombreRol().toUpperCase()));
     }
 
     @Override
