@@ -3,6 +3,7 @@ package com.inventa.inventa.service;
 import com.inventa.inventa.dto.usuario.UsuarioRequestDTO;
 import com.inventa.inventa.entity.Rol;
 import com.inventa.inventa.entity.Usuario;
+import com.inventa.inventa.exceptions.BadRequestException;
 import com.inventa.inventa.exceptions.NotFoundException;
 import com.inventa.inventa.repository.RolRepository;
 import com.inventa.inventa.repository.UsuarioRepository;
@@ -54,6 +55,15 @@ public class UsuarioService {
         if (!isAdmin && !currentUser.getUsuarioId().equals(id)) {
             throw new AccessDeniedException("No tienes permiso para editar a otros usuarios.");
         }
+
+        // Actualizar el nombre de usuario si se proporciona y es diferente
+        if (dto.getNombreUsuario() != null && !dto.getNombreUsuario().isEmpty() && !dto.getNombreUsuario().equals(usuarioAActualizar.getNombreUsuario())) {
+            buscarPorNombreUsuario(dto.getNombreUsuario()).ifPresent(u -> {
+                throw new BadRequestException("El nombre de usuario '" + dto.getNombreUsuario() + "' ya está en uso.");
+            });
+            usuarioAActualizar.setNombreUsuario(dto.getNombreUsuario());
+        }
+
 
         // Actualizar campos seguros
         usuarioAActualizar.setNombreCompleto(dto.getNombreCompleto());
