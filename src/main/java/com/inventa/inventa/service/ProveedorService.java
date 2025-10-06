@@ -75,42 +75,26 @@ public class ProveedorService {
         proveedor.setTelefono(dto.getTelefono());
         proveedor.setDireccion(dto.getDireccion());
 
-        // Si no se envían contactos en el DTO, no se modifican los existentes.
-        if (dto.getContactos() == null) {
-            return proveedorRepository.save(proveedor);
-        }
+        // Limpiar la lista existente para sincronizarla con el DTO
+        proveedor.getContactos().clear();
 
-        Map<Integer, ContactoProveedor> contactosExistentesMap = proveedor.getContactos().stream()
-                .collect(Collectors.toMap(ContactoProveedor::getContactoId, Function.identity()));
-
-        List<ContactoProveedor> contactosActualizados = new ArrayList<>();
-
-        for (var contactoDto : dto.getContactos()) {
-            ContactoProveedor contacto;
-            if (contactoDto.getId() != null) {
-                // Actualización de un contacto existente
-                contacto = contactosExistentesMap.remove(contactoDto.getId());
-                if (contacto == null) {
-                    // Opcional: lanzar excepción si se intenta actualizar un contacto que no existe o no pertenece al proveedor
-                    continue; // Ignorar o manejar el error
-                }
-            } else {
-                // Creación de un nuevo contacto
-                contacto = new ContactoProveedor();
+        if (!CollectionUtils.isEmpty(dto.getContactos())) {
+            dto.getContactos().forEach(contactoDto -> {
+                ContactoProveedor contacto = new ContactoProveedor();
+                // Si el ID existe, JPA lo tratará como una actualización, si no, como una inserción.
+                // Sin embargo, con el clear() de arriba, siempre serán inserciones para el proveedor actual.
+                // Para una verdadera actualización de un contacto existente, necesitaríamos un enfoque diferente,
+                // pero para el caso de uso de "sincronizar la lista", este es el más limpio.
+                
+                contacto.setNombreCompleto(contactoDto.getNombreCompleto());
+                contacto.setCargo(contactoDto.getCargo());
+                contacto.setTelefono(contactoDto.getTelefono());
+                contacto.setEmail(contactoDto.getEmail());
                 contacto.setProveedor(proveedor);
-            }
-            
-            contacto.setNombreCompleto(contactoDto.getNombreCompleto());
-            contacto.setCargo(contactoDto.getCargo());
-            contacto.setTelefono(contactoDto.getTelefono());
-            contacto.setEmail(contactoDto.getEmail());
-            contactosActualizados.add(contactoProveedorService.guardar(contacto));
+                proveedor.getContactos().add(contacto);
+            });
         }
 
-        // Los contactos que quedan en contactosExistentesMap son para eliminar
-        contactosExistentesMap.values().forEach(contacto -> contactoProveedorService.eliminar(contacto.getContactoId()));
-
-        proveedor.setContactos(contactosActualizados);
         return proveedorRepository.save(proveedor);
     }
 

@@ -4,9 +4,7 @@ import lombok.Data;
 
 @Data
 public class ContactoProveedorResponseDTO {
-    private Integer contactoId;
-    private Integer proveedorId;
-    private String proveedorNombre;
+    private Integer id;
     private String nombreCompleto;
     private String cargo;
     private String telefono;

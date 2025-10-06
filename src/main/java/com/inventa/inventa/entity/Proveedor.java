@@ -30,6 +30,6 @@ public class Proveedor {
     @OneToMany(mappedBy = "proveedor")
     private List<Compra> compras = new ArrayList<>();
 
-    @OneToMany(mappedBy = "proveedor")
+    @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContactoProveedor> contactos = new ArrayList<>();
 }

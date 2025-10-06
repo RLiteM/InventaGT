@@ -1,6 +1,9 @@
 package com.inventa.inventa.dto.proveedor;
 
+import com.inventa.inventa.dto.contactoproveedor.ContactoProveedorResponseDTO;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class ProveedorResponseDTO {
@@ -8,4 +11,5 @@ public class ProveedorResponseDTO {
     private String nombreEmpresa;
     private String telefono;
     private String direccion;
+    private List<ContactoProveedorResponseDTO> contactos;
 }
