@@ -10,6 +10,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +42,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    @Transactional
     public Usuario actualizarUsuario(Integer id, UsuarioRequestDTO dto, Usuario currentUser) {
         Usuario usuarioAActualizar = buscarPorId(id)
                 .orElseThrow(() -> new NotFoundException("Usuario a actualizar no encontrado"));
