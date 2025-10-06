@@ -31,6 +31,8 @@ public class SecurityConfig {
                         // Reglas específicas para Administrador
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/ventas/**").hasRole("ADMINISTRADOR")
+                        // Regla para Actualizar: Cualquier usuario logueado puede intentarlo
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").authenticated()
                         // Cualquier otra petición solo necesita que el usuario esté autenticado
                         .anyRequest().authenticated()
                 )
