@@ -3,6 +3,7 @@ package com.inventa.inventa.controller;
 import com.inventa.inventa.dto.proveedor.ProveedorConContactosRequestDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorConContactosUpdateDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorResponseDTO;
+import com.inventa.inventa.dto.proveedor.ProveedorSimpleDTO;
 import com.inventa.inventa.entity.Proveedor;
 import com.inventa.inventa.mapper.ProveedorMapper;
 import com.inventa.inventa.service.ProveedorService;
@@ -28,6 +29,11 @@ public class ProveedorController {
     @GetMapping
     public List<ProveedorResponseDTO> listar() {
         return proveedorService.listar().stream().map(proveedorMapper::toResponse).collect(Collectors.toList());
+    }
+
+    @GetMapping("/simple")
+    public List<ProveedorSimpleDTO> listarSimple() {
+        return proveedorService.listarSimple();
     }
 
     @GetMapping("/{id}")

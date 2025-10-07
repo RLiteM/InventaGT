@@ -2,6 +2,7 @@ package com.inventa.inventa.mapper;
 
 import com.inventa.inventa.dto.proveedor.ProveedorRequestDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorResponseDTO;
+import com.inventa.inventa.dto.proveedor.ProveedorSimpleDTO;
 import com.inventa.inventa.entity.Proveedor;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +34,13 @@ public class ProveedorMapper {
                     .map(contactoProveedorMapper::toResponse)
                     .collect(Collectors.toList()));
         }
+        return dto;
+    }
+
+    public ProveedorSimpleDTO toSimpleResponse(Proveedor proveedor) {
+        ProveedorSimpleDTO dto = new ProveedorSimpleDTO();
+        dto.setProveedorId(proveedor.getProveedorId());
+        dto.setNombreEmpresa(proveedor.getNombreEmpresa());
         return dto;
     }
 }

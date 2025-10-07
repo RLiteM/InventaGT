@@ -2,9 +2,11 @@ package com.inventa.inventa.service;
 
 import com.inventa.inventa.dto.proveedor.ProveedorConContactosRequestDTO;
 import com.inventa.inventa.dto.proveedor.ProveedorConContactosUpdateDTO;
+import com.inventa.inventa.dto.proveedor.ProveedorSimpleDTO;
 import com.inventa.inventa.entity.ContactoProveedor;
 import com.inventa.inventa.entity.Proveedor;
 import com.inventa.inventa.exceptions.NotFoundException;
+import com.inventa.inventa.mapper.ProveedorMapper;
 import com.inventa.inventa.repository.ProveedorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +24,22 @@ public class ProveedorService {
 
     private final ProveedorRepository proveedorRepository;
     private final ContactoProveedorService contactoProveedorService;
+    private final ProveedorMapper proveedorMapper;
 
-    public ProveedorService(ProveedorRepository proveedorRepository, ContactoProveedorService contactoProveedorService) {
+    public ProveedorService(ProveedorRepository proveedorRepository, ContactoProveedorService contactoProveedorService, ProveedorMapper proveedorMapper) {
         this.proveedorRepository = proveedorRepository;
         this.contactoProveedorService = contactoProveedorService;
+        this.proveedorMapper = proveedorMapper;
     }
 
     public List<Proveedor> listar() {
         return proveedorRepository.findAll();
+    }
+
+    public List<ProveedorSimpleDTO> listarSimple() {
+        return proveedorRepository.findAll().stream()
+                .map(proveedorMapper::toSimpleResponse)
+                .collect(Collectors.toList());
     }
 
     public Optional<Proveedor> buscarPorId(Integer id) {
