@@ -25,12 +25,12 @@ public class InventarioController {
 
     @GetMapping("/resumen")
     public List<ProductoResponseDTO> resumenInventario() {
-        return productoService.listar().stream().map(productoMapper::toResponse).collect(Collectors.toList());
+        return productoService.listar(null).stream().map(productoMapper::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/criticos")
     public List<ProductoResponseDTO> productosConStockCritico() {
-        return productoService.listar().stream()
+        return productoService.listar(null).stream()
                 .filter(producto -> producto.getStockActual() != null && producto.getStockMinimo() != null
                         && producto.getStockActual().compareTo(producto.getStockMinimo()) <= 0)
                 .map(productoMapper::toResponse)

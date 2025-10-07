@@ -33,7 +33,6 @@ public class CompraMapper {
         compra.setUsuario(usuario);
         compra.setFechaCompra(dto.getFechaCompra());
         compra.setNumeroFactura(dto.getNumeroFactura());
-        compra.setMontoTotal(dto.getMontoTotal());
     }
 
     public CompraResponseDTO toResponse(Compra compra) {
