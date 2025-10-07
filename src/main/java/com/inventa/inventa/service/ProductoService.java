@@ -15,11 +15,16 @@ public class ProductoService {
         this.productoRepository = productoRepository;
     }
 
-    public List<Producto> listar(String searchTerm) {
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+    public List<Producto> listar(String searchTerm, Integer proveedorId) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return new java.util.ArrayList<>(); // No buscar si no hay término de búsqueda
+        }
+
+        if (proveedorId != null) {
+            return productoRepository.findByProveedorAndSearchTerm(proveedorId, searchTerm);
+        } else {
             return productoRepository.findByNombreContainingIgnoreCaseOrSkuContainingIgnoreCase(searchTerm, searchTerm);
         }
-        return productoRepository.findAll();
     }
 
     public Optional<Producto> buscarPorId(Integer id) {
