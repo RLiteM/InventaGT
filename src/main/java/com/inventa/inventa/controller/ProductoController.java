@@ -26,8 +26,8 @@ public class ProductoController {
     }
 
     @GetMapping
-    public List<ProductoResponseDTO> listar() {
-        return productoService.listar().stream().map(productoMapper::toResponse).collect(Collectors.toList());
+    public List<ProductoResponseDTO> listar(@RequestParam(required = false) String search) {
+        return productoService.listar(search).stream().map(productoMapper::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")

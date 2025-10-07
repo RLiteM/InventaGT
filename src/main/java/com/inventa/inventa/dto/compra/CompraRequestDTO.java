@@ -15,7 +15,6 @@ public class CompraRequestDTO {
     private Integer usuarioId;
     private LocalDate fechaCompra;
     private String numeroFactura;
-    private BigDecimal montoTotal;
     private List<DetalleCompraRequestDTO> detalles;
 
     // Explicit Getters
@@ -33,10 +32,6 @@ public class CompraRequestDTO {
 
     public String getNumeroFactura() {
         return numeroFactura;
-    }
-
-    public BigDecimal getMontoTotal() {
-        return montoTotal;
     }
 
     public List<DetalleCompraRequestDTO> getDetalles() {
@@ -58,10 +53,6 @@ public class CompraRequestDTO {
 
     public void setNumeroFactura(String numeroFactura) {
         this.numeroFactura = numeroFactura;
-    }
-
-    public void setMontoTotal(BigDecimal montoTotal) {
-        this.montoTotal = montoTotal;
     }
 
     public void setDetalles(List<DetalleCompraRequestDTO> detalles) {

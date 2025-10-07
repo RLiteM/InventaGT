@@ -15,7 +15,10 @@ public class ProductoService {
         this.productoRepository = productoRepository;
     }
 
-    public List<Producto> listar() {
+    public List<Producto> listar(String searchTerm) {
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            return productoRepository.findByNombreContainingIgnoreCaseOrSkuContainingIgnoreCase(searchTerm, searchTerm);
+        }
         return productoRepository.findAll();
     }
 
