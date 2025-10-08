@@ -31,6 +31,14 @@ public class CategoriaService {
         return categoriaRepository.save(categoria);
     }
 
+    public Categoria actualizar(Categoria categoria) {
+        Categoria categoriaPorNombre = categoriaRepository.findByNombre(categoria.getNombre());
+        if (categoriaPorNombre != null && !categoriaPorNombre.getCategoriaId().equals(categoria.getCategoriaId())) {
+            throw new BadRequestException("Ya existe una categoría con el nombre: " + categoria.getNombre());
+        }
+        return categoriaRepository.save(categoria);
+    }
+
     public void eliminar(Integer id) {
         categoriaRepository.deleteById(id);
     }

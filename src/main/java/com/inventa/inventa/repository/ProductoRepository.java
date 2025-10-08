@@ -16,4 +16,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
     @Query("SELECT DISTINCT p FROM Producto p JOIN DetalleCompra dc ON dc.producto = p WHERE dc.compra.proveedor.proveedorId = :proveedorId AND (LOWER(p.nombre) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     List<Producto> findByProveedorAndSearchTerm(@Param("proveedorId") Integer proveedorId, @Param("searchTerm") String searchTerm);
+
+    List<Producto> findByCategoria_CategoriaId(Integer categoriaId);
+
+    long countByCategoria_CategoriaId(Integer categoriaId);
 }
