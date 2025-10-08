@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
 import com.inventa.inventa.entity.Producto;
@@ -69,5 +70,12 @@ public class ProductoController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con ese SKU");
         }
         return productoMapper.toResponse(producto);
+    }
+
+    @GetMapping("/nombre-sku")
+    public List<ProductoNombreSkuDTO> listarNombreSku() {
+        return productoService.listarTodos().stream()
+                .map(productoMapper::toNombreSkuDTO)
+                .collect(Collectors.toList());
     }
 }

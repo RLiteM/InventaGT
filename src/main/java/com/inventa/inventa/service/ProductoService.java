@@ -27,6 +27,10 @@ public class ProductoService {
         }
     }
 
+    public List<Producto> listarTodos() {
+        return productoRepository.findAll();
+    }
+
     public List<Producto> findByCategoriaId(Integer categoriaId) {
         return productoRepository.findByCategoria_CategoriaId(categoriaId);
     }

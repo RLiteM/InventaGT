@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
 import com.inventa.inventa.entity.Categoria;
@@ -58,5 +59,9 @@ public class ProductoMapper {
         }
 
         return dto;
+    }
+
+    public ProductoNombreSkuDTO toNombreSkuDTO(Producto producto) {
+        return new ProductoNombreSkuDTO(producto.getNombre(), producto.getSku());
     }
 }
