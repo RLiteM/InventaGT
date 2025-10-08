@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.inventa.inventa.entity.Categoria;
 import com.inventa.inventa.repository.CategoriaRepository;
+import com.inventa.inventa.exceptions.BadRequestException;
 
 @Service
 public class CategoriaService {
@@ -24,6 +25,9 @@ public class CategoriaService {
     }
 
     public Categoria guardar(Categoria categoria) {
+        if (categoriaRepository.findByNombre(categoria.getNombre()) != null) {
+            throw new BadRequestException("Ya existe una categoría con el nombre: " + categoria.getNombre());
+        }
         return categoriaRepository.save(categoria);
     }
 
