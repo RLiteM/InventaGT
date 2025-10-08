@@ -9,5 +9,7 @@ import com.inventa.inventa.entity.Cliente;
 public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
 
     Cliente findByIdentificacionFiscal(String identificacionFiscal);
+
+    long countByTipoCliente(Cliente.TipoCliente tipoCliente);
     
 }

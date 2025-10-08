@@ -18,4 +18,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByProveedorAndSearchTerm(@Param("proveedorId") Integer proveedorId, @Param("searchTerm") String searchTerm);
 
     List<Producto> findByCategoria_CategoriaId(Integer categoriaId);
+
+    @Query("SELECT count(p) FROM Producto p WHERE COALESCE((SELECT SUM(l.cantidadActual) FROM Lote l WHERE l.producto = p), 0) <= :threshold")
+    long countLowStockProducts(@Param("threshold") long threshold);
 }

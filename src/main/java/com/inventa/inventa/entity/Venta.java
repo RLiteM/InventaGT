@@ -1,5 +1,6 @@
 package com.inventa.inventa.entity;
 
+import com.inventa.inventa.dto.reporte.VentasPorMesDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@NamedNativeQuery(
+    name = "Venta.findMonthlySalesLast12Months",
+    query = "SELECT TO_CHAR(v.fecha_venta, 'YYYY-MM') as mes, SUM(v.monto_total) as total " +
+            "FROM venta v " +
+            "WHERE v.fecha_venta >= CURRENT_DATE - INTERVAL '12' MONTH " +
+            "GROUP BY mes " +
+            "ORDER BY mes ASC",
+    resultSetMapping = "VentasPorMesMapping"
+)
+@SqlResultSetMapping(
+    name = "VentasPorMesMapping",
+    classes = @ConstructorResult(
+        targetClass = VentasPorMesDTO.class,
+        columns = {
+            @ColumnResult(name = "mes", type = String.class),
+            @ColumnResult(name = "total", type = BigDecimal.class)
+        }
+    )
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
