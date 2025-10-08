@@ -31,10 +31,6 @@ public class ProductoService {
         return productoRepository.findByCategoria_CategoriaId(categoriaId);
     }
 
-    public long countByCategoriaId(Integer categoriaId) {
-        return productoRepository.countByCategoria_CategoriaId(categoriaId);
-    }
-
     public Optional<Producto> buscarPorId(Integer id) {
         return productoRepository.findById(id);
     }

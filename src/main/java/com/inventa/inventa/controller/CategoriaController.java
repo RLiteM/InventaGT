@@ -1,8 +1,8 @@
 package com.inventa.inventa.controller;
 
+import com.inventa.inventa.dto.categoria.CategoriaConteoDTO;
 import com.inventa.inventa.dto.categoria.CategoriaRequestDTO;
 import com.inventa.inventa.dto.categoria.CategoriaResponseDTO;
-import com.inventa.inventa.dto.categoria.CategoriaResumenDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
 import com.inventa.inventa.entity.Categoria;
 import com.inventa.inventa.mapper.CategoriaMapper;
@@ -33,8 +33,8 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public List<CategoriaResponseDTO> listar() {
-        return categoriaService.listar().stream().map(categoriaMapper::toResponse).collect(Collectors.toList());
+    public List<CategoriaConteoDTO> listar() {
+        return categoriaService.listar();
     }
 
     @PostMapping
@@ -73,16 +73,6 @@ public class CategoriaController {
         Categoria categoria = categoriaService.buscarPorId(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
         return categoriaMapper.toResponse(categoria);
-    }
-
-    @GetMapping("/{id}/resumen")
-    public CategoriaResumenDTO obtenerResumenCategoria(@PathVariable Integer id) {
-        Categoria categoria = categoriaService.buscarPorId(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoría no encontrada"));
-
-        long cantidadProductos = productoService.countByCategoriaId(id);
-
-        return new CategoriaResumenDTO(categoria.getCategoriaId(), categoria.getNombre(), cantidadProductos);
     }
 
     @GetMapping("/{id}/productos")

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
+import com.inventa.inventa.dto.categoria.CategoriaConteoDTO;
 import com.inventa.inventa.entity.Categoria;
 import com.inventa.inventa.repository.CategoriaRepository;
 import com.inventa.inventa.exceptions.BadRequestException;
@@ -16,8 +17,8 @@ public class CategoriaService {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public List<Categoria> listar() {
-        return categoriaRepository.findAll();
+    public List<CategoriaConteoDTO> listar() {
+        return categoriaRepository.findAllWithProductCount();
     }
 
     public Optional<Categoria> buscarPorId(Integer id) {

@@ -18,6 +18,4 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     List<Producto> findByProveedorAndSearchTerm(@Param("proveedorId") Integer proveedorId, @Param("searchTerm") String searchTerm);
 
     List<Producto> findByCategoria_CategoriaId(Integer categoriaId);
-
-    long countByCategoria_CategoriaId(Integer categoriaId);
 }
