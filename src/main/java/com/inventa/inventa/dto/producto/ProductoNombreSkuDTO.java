@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductoNombreSkuDTO {
+    private Integer productoId;
     private String nombre;
     private String sku;
 }

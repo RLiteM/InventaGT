@@ -62,6 +62,6 @@ public class ProductoMapper {
     }
 
     public ProductoNombreSkuDTO toNombreSkuDTO(Producto producto) {
-        return new ProductoNombreSkuDTO(producto.getNombre(), producto.getSku());
+        return new ProductoNombreSkuDTO(producto.getProductoId(), producto.getNombre(), producto.getSku());
     }
 }
