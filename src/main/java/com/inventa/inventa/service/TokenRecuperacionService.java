@@ -4,9 +4,13 @@ import com.inventa.inventa.entity.TokenRecuperacion;
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.repository.TokenRecuperacionRepository;
 import com.inventa.inventa.repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
@@ -17,6 +21,8 @@ import java.util.UUID;
 
 @Service
 public class TokenRecuperacionService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TokenRecuperacionService.class);
 
     private final TokenRecuperacionRepository tokenRepo;
     private final UsuarioService usuarioService;
@@ -36,6 +42,7 @@ public class TokenRecuperacionService {
     // ===================================
     // INICIAR PROCESO DE RECUPERACIÓN
     // ===================================
+    @Transactional
     public void iniciarProcesoRecuperacion(String email) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(email);
 
@@ -50,7 +57,13 @@ public class TokenRecuperacionService {
                     "El enlace expirará en 1 hora.\n\n" +
                     "Saludos,\nEl equipo de InventaGT";
 
-            emailService.sendEmail(usuario.getCorreo(), "Recuperación de Contraseña - InventaGT", emailText);
+            try {
+                emailService.sendEmail(usuario.getCorreo(), "Recuperación de Contraseña - InventaGT", emailText);
+            } catch (MailException e) {
+                logger.error("Error al enviar el correo de recuperación a {}", usuario.getCorreo(), e);
+                // No lanzamos la excepción para no revelar si el correo existe.
+                // El error ya quedó loggeado.
+            }
         }
         // Si no se encuentra el usuario, no hacemos nada para evitar la enumeración de usuarios.
     }
@@ -59,6 +72,7 @@ public class TokenRecuperacionService {
     // =========================
     // GENERAR TOKEN NUEVO
     // =========================
+    @Transactional
     public TokenRecuperacion generarToken(Usuario usuario) {
         tokenRepo.deleteByUsuario(usuario);
 
@@ -81,6 +95,7 @@ public class TokenRecuperacionService {
                tokenOpt.get().getFechaExpiracion().isAfter(LocalDateTime.now());
     }
 
+    @Transactional
     public void marcarComoUsado(String tokenStr) {
         tokenRepo.findByToken(tokenStr).ifPresent(t -> {
             t.setUsado(1);
@@ -106,6 +121,7 @@ public class TokenRecuperacionService {
     // =========================
     // ELIMINAR POR ID
     // =========================
+    @Transactional
     public void eliminar(Integer id) throws DataIntegrityViolationException {
         TokenRecuperacion token = tokenRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no encontrado"));
