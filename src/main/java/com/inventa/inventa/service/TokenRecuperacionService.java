@@ -3,7 +3,11 @@ package com.inventa.inventa.service;
 import com.inventa.inventa.entity.TokenRecuperacion;
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.repository.TokenRecuperacionRepository;
+import com.inventa.inventa.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -18,11 +22,45 @@ public class TokenRecuperacionService {
 
     private final TokenRecuperacionRepository tokenRepo;
     private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
+    private final JavaMailSender mailSender;
 
-    public TokenRecuperacionService(TokenRecuperacionRepository tokenRepo, UsuarioService usuarioService) {
+    @Value("${inventagt.frontend.url}")
+    private String frontendUrl;
+
+    public TokenRecuperacionService(TokenRecuperacionRepository tokenRepo, UsuarioService usuarioService, UsuarioRepository usuarioRepository, JavaMailSender mailSender) {
         this.tokenRepo = tokenRepo;
         this.usuarioService = usuarioService;
+        this.usuarioRepository = usuarioRepository;
+        this.mailSender = mailSender;
     }
+
+    // ===================================
+    // INICIAR PROCESO DE RECUPERACIÓN
+    // ===================================
+    public void iniciarProcesoRecuperacion(String email) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(email);
+
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            TokenRecuperacion token = generarToken(usuario);
+
+            // Enviar correo
+            SimpleMailMessage correo = new SimpleMailMessage();
+            correo.setTo(usuario.getCorreo());
+            correo.setSubject("Recuperación de Contraseña - InventaGT");
+            String urlRecuperacion = frontendUrl + "/reset-password?token=" + token.getToken();
+            correo.setText("Hola " + usuario.getNombreCompleto() + ",\n\n" +
+                    "Para restablecer tu contraseña, haz clic en el siguiente enlace:\n" +
+                    urlRecuperacion + "\n\n" +
+                    "Si no solicitaste este cambio, puedes ignorar este correo.\n\n" +
+                    "El enlace expirará en 1 hora.\n\n" +
+                    "Saludos,\nEl equipo de InventaGT");
+            mailSender.send(correo);
+        }
+        // Si no se encuentra el usuario, no hacemos nada para evitar la enumeración de usuarios.
+    }
+
 
     // =========================
     // GENERAR TOKEN NUEVO
