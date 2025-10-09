@@ -57,13 +57,7 @@ public class TokenRecuperacionService {
                     "El enlace expirará en 1 hora.\n\n" +
                     "Saludos,\nEl equipo de InventaGT";
 
-            try {
-                emailService.sendEmail(usuario.getCorreo(), "Recuperación de Contraseña - InventaGT", emailText);
-            } catch (MailException e) {
-                logger.error("Error al enviar el correo de recuperación a {}", usuario.getCorreo(), e);
-                // No lanzamos la excepción para no revelar si el correo existe.
-                // El error ya quedó loggeado.
-            }
+            emailService.sendEmail(usuario.getCorreo(), "Recuperación de Contraseña - InventaGT", emailText);
         }
         // Si no se encuentra el usuario, no hacemos nada para evitar la enumeración de usuarios.
     }
