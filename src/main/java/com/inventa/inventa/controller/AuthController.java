@@ -29,16 +29,10 @@ public class AuthController {
 
     @PostMapping("/solicitar-recuperacion")
     public ResponseEntity<Map<String, String>> solicitarRecuperacion(@Valid @RequestBody SolicitarRecuperacionRequestDTO request) {
-        try {
-            tokenRecuperacionService.iniciarProcesoRecuperacion(request.getEmail());
-            // Mensaje de éxito genérico
-            Map<String, String> response = Map.of("message", "Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.");
-            return ResponseEntity.ok(response);
-        } catch (MailException e) {
-            // El GlobalExceptionHandler se encargará de esto, pero lo dejamos por si acaso.
-            Map<String, String> errorResponse = Map.of("error", "Error al enviar el correo. Contacta al administrador.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+        tokenRecuperacionService.iniciarProcesoRecuperacion(request.getEmail());
+        // Se devuelve una respuesta genérica para no revelar si el correo existe o no en la base de datos.
+        Map<String, String> response = Map.of("message", "Si su correo electrónico está registrado, recibirá un enlace para restablecer su contraseña.");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/resetear-password")
