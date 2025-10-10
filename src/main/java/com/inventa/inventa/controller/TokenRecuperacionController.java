@@ -71,16 +71,6 @@ public class TokenRecuperacionController {
         return tokenMapper.toResponse(token);
     }
 
-    // =========================
-    // MARCAR TOKEN COMO USADO
-    // =========================
-    @PutMapping("/usar/{token}")
-    public void marcarComoUsado(@PathVariable String token) {
-        if (!tokenService.validarToken(token)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token inválido o expirado");
-        }
-        tokenService.marcarComoUsado(token);
-    }
 
     // =========================
     // ELIMINAR TOKEN POR ID

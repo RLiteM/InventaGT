@@ -49,7 +49,7 @@ public class TokenRecuperacionService {
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
             TokenRecuperacion token = generarToken(usuario);
-            String urlRecuperacion = frontendUrl + "/reset-password?token=" + token.getToken();
+            String urlRecuperacion = frontendUrl + "/inventa/cambiar-contrasena?token=" + token.getToken();
             String emailText = "Hola " + usuario.getNombreCompleto() + ",\n\n" +
                     "Para restablecer tu contraseña, haz clic en el siguiente enlace:\n" +
                     urlRecuperacion + "\n\n" +
