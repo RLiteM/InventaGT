@@ -49,14 +49,18 @@ public class AuthService {
 
     @Transactional
     public void resetearPassword(String token, String nuevaContrasena) {
-        if (!tokenRecuperacionService.validarToken(token)) {
-            throw new BadRequestException("Token inválido o expirado.");
+        TokenRecuperacion tokenRec = tokenRecuperacionService.buscarPorToken(token)
+                .orElseThrow(() -> new BadRequestException("El token proporcionado no es válido."));
+
+        if (tokenRec.getUsado() != 0 || tokenRec.getFechaExpiracion().isBefore(java.time.LocalDateTime.now())) {
+            throw new BadRequestException("El token ha expirado o ya ha sido utilizado.");
         }
 
-        TokenRecuperacion tokenRec = tokenRecuperacionService.buscarPorToken(token)
-                .orElseThrow(() -> new BadRequestException("Token no encontrado."));
-
         Usuario usuario = tokenRec.getUsuario();
+        if (usuario == null) {
+            throw new BadRequestException("El token no está asociado a ningún usuario.");
+        }
+        
         usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
         usuarioRepository.save(usuario);
 

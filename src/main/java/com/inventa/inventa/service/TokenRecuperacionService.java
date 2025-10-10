@@ -79,15 +79,6 @@ public class TokenRecuperacionService {
         return tokenRepo.save(token);
     }
 
-    // =========================
-    // VALIDAR Y MARCAR USO
-    // =========================
-    public boolean validarToken(String tokenStr) {
-        Optional<TokenRecuperacion> tokenOpt = tokenRepo.findByToken(tokenStr);
-        return tokenOpt.isPresent() &&
-               tokenOpt.get().getUsado() == 0 &&
-               tokenOpt.get().getFechaExpiracion().isAfter(LocalDateTime.now());
-    }
 
     @Transactional
     public void marcarComoUsado(String tokenStr) {
