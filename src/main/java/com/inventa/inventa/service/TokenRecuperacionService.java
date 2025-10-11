@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.mail.MailException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,11 +57,7 @@ public class TokenRecuperacionService {
                     "El enlace expirará en 1 hora.\n\n" +
                     "Saludos,\nEl equipo de InventaGT";
 
-            try {
-                emailService.sendEmail(usuario.getCorreo(), "Recuperación de Contraseña - InventaGT", emailText);
-            } catch (MailException e) {
-                logger.error("Error al enviar el correo de recuperación: {}", e.getMessage());
-            }
+            emailService.sendEmail(usuario.getCorreo(), "Recuperación de Contraseña - InventaGT", emailText);
         }
         // Si no se encuentra el usuario, no hacemos nada para evitar la enumeración de usuarios.
     }
