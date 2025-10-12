@@ -17,7 +17,7 @@ public class ProductoService {
 
     public List<Producto> listar(String searchTerm, Integer proveedorId) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return new java.util.ArrayList<>(); // No buscar si no hay término de búsqueda
+            return productoRepository.findAll();
         }
 
         if (proveedorId != null) {
