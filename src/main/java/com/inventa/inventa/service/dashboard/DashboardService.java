@@ -22,12 +22,12 @@ public class DashboardService {
      */
     public ResumenDashboardDTO getResumenDashboard() {
         String sql = "SELECT " +
-            "(SELECT COUNT(*) FROM producto) AS totalProductos, " +
-            "(SELECT SUM(stock_actual) FROM producto) AS stockTotal, " +
-            "(SELECT SUM(stock_actual * ultimo_costo) FROM producto) AS valorInventario, " +
-            "(SELECT SUM(monto_total) FROM venta WHERE date_trunc('month', fecha_venta) = date_trunc('month', CURRENT_DATE)) AS ventasMesActual, " +
-            "(SELECT SUM(dv.cantidad * (dv.precio_unitario_venta - p.ultimo_costo)) FROM detalle_venta dv JOIN lote l ON dv.lote_id = l.lote_id JOIN producto p ON l.producto_id = p.producto_id JOIN venta v ON dv.venta_id = v.venta_id WHERE date_trunc('month', v.fecha_venta) = date_trunc('month', CURRENT_DATE)) AS gananciaBruta, " +
-            "(SELECT COUNT(*) FROM cliente) AS totalClientes";
+            "COALESCE((SELECT COUNT(*) FROM producto), 0) AS totalProductos, " +
+            "COALESCE((SELECT SUM(stock_actual) FROM producto), 0) AS stockTotal, " +
+            "COALESCE((SELECT SUM(stock_actual * ultimo_costo) FROM producto), 0) AS valorInventario, " +
+            "COALESCE((SELECT SUM(monto_total) FROM venta WHERE date_trunc('month', fecha_venta) = date_trunc('month', CURRENT_DATE)), 0) AS ventasMesActual, " +
+            "COALESCE((SELECT SUM(dv.cantidad * (dv.precio_unitario_venta - p.ultimo_costo)) FROM detalle_venta dv JOIN lote l ON dv.lote_id = l.lote_id JOIN producto p ON l.producto_id = p.producto_id JOIN venta v ON dv.venta_id = v.venta_id WHERE date_trunc('month', v.fecha_venta) = date_trunc('month', CURRENT_DATE)), 0) AS gananciaBruta, " +
+            "COALESCE((SELECT COUNT(*) FROM cliente), 0) AS totalClientes";
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> new ResumenDashboardDTO(
             rs.getLong("totalProductos"),
@@ -68,7 +68,7 @@ public class DashboardService {
      * Movimientos: Últimas 5 entradas (compras/ajustes) y 5 salidas (ventas/ajustes).
      */
     public MovimientosRecientesDTO getMovimientosRecientes() {
-        String entradasSql = "(SELECT dc.fecha_compra AS fecha, 'Compra' AS tipo, dc.cantidad, p.nombre AS producto_nombre, u.nombre_usuario AS usuario FROM detalle_compra JOIN compra c ON dc.compra_id = c.compra_id JOIN producto p ON dc.producto_id = p.producto_id JOIN usuario u ON c.usuario_id = u.usuario_id ORDER BY c.fecha_compra DESC LIMIT 5) " +
+        String entradasSql = "(SELECT c.fecha_compra AS fecha, 'Compra' AS tipo, dc.cantidad, p.nombre AS producto_nombre, u.nombre_usuario AS usuario FROM detalle_compra dc JOIN compra c ON dc.compra_id = c.compra_id JOIN producto p ON dc.producto_id = p.producto_id JOIN usuario u ON c.usuario_id = u.usuario_id ORDER BY c.fecha_compra DESC LIMIT 5) " +
                              "UNION ALL " +
                              "(SELECT ai.fecha_ajuste::date AS fecha, 'Ajuste Entrada' AS tipo, ai.cantidad, p.nombre AS producto_nombre, u.nombre_usuario AS usuario FROM ajuste_inventario ai JOIN lote l ON ai.lote_id = l.lote_id JOIN producto p ON l.producto_id = p.producto_id JOIN usuario u ON ai.usuario_id = u.usuario_id WHERE ai.tipo_ajuste = 'Entrada' ORDER BY ai.fecha_ajuste DESC LIMIT 5) ORDER BY fecha DESC LIMIT 5";
         List<MovimientosRecientesDTO.MovimientoInventarioDTO> entradas = jdbcTemplate.query(entradasSql, (rs, rowNum) -> new MovimientosRecientesDTO.MovimientoInventarioDTO(
