@@ -25,16 +25,16 @@ public class DashboardService {
             "COALESCE((SELECT COUNT(*) FROM producto), 0) AS totalProductos, " +
             "COALESCE((SELECT SUM(stock_actual) FROM producto), 0) AS stockTotal, " +
             "COALESCE((SELECT SUM(stock_actual * ultimo_costo) FROM producto), 0) AS valorInventario, " +
-            "COALESCE((SELECT SUM(monto_total) FROM venta WHERE date_trunc('month', fecha_venta) = date_trunc('month', CURRENT_DATE)), 0) AS ventasMesActual, " +
-            "COALESCE((SELECT SUM(dv.cantidad * (dv.precio_unitario_venta - p.ultimo_costo)) FROM detalle_venta dv JOIN lote l ON dv.lote_id = l.lote_id JOIN producto p ON l.producto_id = p.producto_id JOIN venta v ON dv.venta_id = v.venta_id WHERE date_trunc('month', v.fecha_venta) = date_trunc('month', CURRENT_DATE)), 0) AS gananciaBruta, " +
+            "COALESCE((SELECT SUM(monto_total) FROM venta), 0) AS totalVentasHistorico, " +
+            "COALESCE((SELECT SUM(dv.cantidad * (dv.precio_unitario_venta - p.ultimo_costo)) FROM detalle_venta dv JOIN lote l ON dv.lote_id = l.lote_id JOIN producto p ON l.producto_id = p.producto_id), 0) AS gananciaBrutaHistorica, " +
             "COALESCE((SELECT COUNT(*) FROM cliente), 0) AS totalClientes";
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> new ResumenDashboardDTO(
             rs.getLong("totalProductos"),
             rs.getBigDecimal("stockTotal"),
             rs.getBigDecimal("valorInventario"),
-            rs.getBigDecimal("ventasMesActual"),
-            rs.getBigDecimal("gananciaBruta"),
+            rs.getBigDecimal("totalVentasHistorico"),
+            rs.getBigDecimal("gananciaBrutaHistorica"),
             rs.getLong("totalClientes")
         ));
     }

@@ -6,7 +6,7 @@ public record ResumenDashboardDTO(
     long totalProductos,
     BigDecimal stockTotal,
     BigDecimal valorInventario,
-    BigDecimal ventasMesActual,
-    BigDecimal gananciaBrutaMesActual,
+    BigDecimal totalVentasHistorico,
+    BigDecimal gananciaBrutaHistorica,
     long totalClientes
 ) {}
