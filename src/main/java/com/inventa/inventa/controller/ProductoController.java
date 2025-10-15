@@ -1,6 +1,5 @@
 package com.inventa.inventa.controller;
 
-import com.inventa.inventa.dto.producto.ActualizarPreciosDTO;
 import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -29,7 +28,7 @@ public class ProductoController {
 
     @GetMapping
     public List<ProductoResponseDTO> listar(@RequestParam(required = false) String search, @RequestParam(required = false) Integer proveedorId) {
-        return productoService.listar(search, proveedorId);
+        return productoService.listar(search, proveedorId).stream().map(productoMapper::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -55,9 +54,9 @@ public class ProductoController {
         return productoMapper.toResponse(productoService.guardar(producto));
     }
 
-    @PatchMapping("/{id}/precios")
-    public ResponseEntity<ProductoResponseDTO> updatePrices(@PathVariable Integer id, @RequestBody ActualizarPreciosDTO preciosDTO) {
-        ProductoResponseDTO updatedProducto = productoService.updatePrices(id, preciosDTO);
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProductoResponseDTO> partialUpdateProducto(@PathVariable Integer id, @RequestBody ProductoRequestDTO requestDTO) {
+        ProductoResponseDTO updatedProducto = productoService.partialUpdate(id, requestDTO);
         return ResponseEntity.ok(updatedProducto);
     }
 
@@ -81,6 +80,8 @@ public class ProductoController {
 
     @GetMapping("/nombre-sku")
     public List<ProductoNombreSkuDTO> listarNombreSku() {
-        return productoService.listarTodos();
+        return productoService.listarTodos().stream()
+                .map(productoMapper::toNombreSkuDTO)
+                .collect(Collectors.toList());
     }
 }

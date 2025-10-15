@@ -1,57 +1,43 @@
 package com.inventa.inventa.service;
 
-import java.util.List;
-import java.util.Optional;
-import org.springframework.stereotype.Service;
-
-import com.inventa.inventa.entity.Producto;
-import com.inventa.inventa.dto.producto.ActualizarPreciosDTO;
+import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
+import com.inventa.inventa.entity.Categoria;
+import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.exceptions.NotFoundException;
 import com.inventa.inventa.mapper.ProductoMapper;
-import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
-import java.util.stream.Collectors;
 import com.inventa.inventa.repository.ProductoRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductoService {
     private final ProductoRepository productoRepository;
     private final ProductoMapper productoMapper;
+    private final CategoriaService categoriaService;
 
-    public ProductoService(ProductoRepository productoRepository, ProductoMapper productoMapper) {
+    public ProductoService(ProductoRepository productoRepository, ProductoMapper productoMapper, CategoriaService categoriaService) {
         this.productoRepository = productoRepository;
         this.productoMapper = productoMapper;
+        this.categoriaService = categoriaService;
     }
 
-    public ProductoResponseDTO updatePrices(Integer id, ActualizarPreciosDTO preciosDTO) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Producto no encontrado con id: " + id));
-
-        if (preciosDTO.getPrecioMinorista() != null) {
-            producto.setPrecioMinorista(preciosDTO.getPrecioMinorista());
-        }
-        if (preciosDTO.getPrecioMayorista() != null) {
-            producto.setPrecioMayorista(preciosDTO.getPrecioMayorista());
-        }
-
-        Producto updatedProducto = productoRepository.save(producto);
-        return productoMapper.toResponse(updatedProducto);
-    }
-
-    public List<ProductoResponseDTO> listar(String searchTerm, Integer proveedorId) {
-        List<Producto> productos;
+    public List<Producto> listar(String searchTerm, Integer proveedorId) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            productos = productoRepository.findAll();
-        } else if (proveedorId != null) {
-            productos = productoRepository.findByProveedorAndSearchTerm(proveedorId, searchTerm);
-        } else {
-            productos = productoRepository.findByNombreContainingIgnoreCaseOrSkuContainingIgnoreCase(searchTerm, searchTerm);
+            return productoRepository.findAll();
         }
-        return productos.stream().map(productoMapper::toResponse).collect(Collectors.toList());
+
+        if (proveedorId != null) {
+            return productoRepository.findByProveedorAndSearchTerm(proveedorId, searchTerm);
+        } else {
+            return productoRepository.findByNombreContainingIgnoreCaseOrSkuContainingIgnoreCase(searchTerm, searchTerm);
+        }
     }
 
-    public List<ProductoNombreSkuDTO> listarTodos() {
-        return productoRepository.findAll().stream().map(productoMapper::toNombreSkuDTO).collect(Collectors.toList());
+    public List<Producto> listarTodos() {
+        return productoRepository.findAll();
     }
 
     public List<Producto> findByCategoriaId(Integer categoriaId) {
@@ -72,5 +58,46 @@ public class ProductoService {
 
     public Producto buscarPorSku(String sku) {
         return productoRepository.findBySku(sku);
+    }
+
+    public ProductoResponseDTO partialUpdate(Integer id, ProductoRequestDTO dto) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Producto no encontrado con id: " + id));
+
+        if (dto.getSku() != null) {
+            producto.setSku(dto.getSku());
+        }
+        if (dto.getNombre() != null) {
+            producto.setNombre(dto.getNombre());
+        }
+        if (dto.getDescripcion() != null) {
+            producto.setDescripcion(dto.getDescripcion());
+        }
+        if (dto.getUltimoCosto() != null) {
+            producto.setUltimoCosto(dto.getUltimoCosto());
+        }
+        if (dto.getPrecioMinorista() != null) {
+            producto.setPrecioMinorista(dto.getPrecioMinorista());
+        }
+        if (dto.getPrecioMayorista() != null) {
+            producto.setPrecioMayorista(dto.getPrecioMayorista());
+        }
+        if (dto.getStockActual() != null) {
+            producto.setStockActual(dto.getStockActual());
+        }
+        if (dto.getStockMinimo() != null) {
+            producto.setStockMinimo(dto.getStockMinimo());
+        }
+        if (dto.getUnidadMedida() != null) {
+            producto.setUnidadMedida(dto.getUnidadMedida());
+        }
+        if (dto.getCategoriaId() != null) {
+            Categoria categoria = categoriaService.buscarPorId(dto.getCategoriaId())
+                    .orElseThrow(() -> new NotFoundException("Categoría no encontrada"));
+            producto.setCategoria(categoria);
+        }
+
+        Producto updatedProducto = productoRepository.save(producto);
+        return productoMapper.toResponse(updatedProducto);
     }
 }
