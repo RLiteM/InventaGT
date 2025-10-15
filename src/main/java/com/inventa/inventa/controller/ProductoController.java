@@ -1,18 +1,19 @@
 package com.inventa.inventa.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
+import com.inventa.inventa.dto.producto.ActualizarPreciosDTO;
 import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
 import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.mapper.ProductoMapper;
 import com.inventa.inventa.service.ProductoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/productos")
@@ -28,7 +29,7 @@ public class ProductoController {
 
     @GetMapping
     public List<ProductoResponseDTO> listar(@RequestParam(required = false) String search, @RequestParam(required = false) Integer proveedorId) {
-        return productoService.listar(search, proveedorId).stream().map(productoMapper::toResponse).collect(Collectors.toList());
+        return productoService.listar(search, proveedorId);
     }
 
     @GetMapping("/{id}")
@@ -54,6 +55,12 @@ public class ProductoController {
         return productoMapper.toResponse(productoService.guardar(producto));
     }
 
+    @PatchMapping("/{id}/precios")
+    public ResponseEntity<ProductoResponseDTO> updatePrices(@PathVariable Integer id, @RequestBody ActualizarPreciosDTO preciosDTO) {
+        ProductoResponseDTO updatedProducto = productoService.updatePrices(id, preciosDTO);
+        return ResponseEntity.ok(updatedProducto);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Integer id) {
@@ -74,8 +81,6 @@ public class ProductoController {
 
     @GetMapping("/nombre-sku")
     public List<ProductoNombreSkuDTO> listarNombreSku() {
-        return productoService.listarTodos().stream()
-                .map(productoMapper::toNombreSkuDTO)
-                .collect(Collectors.toList());
+        return productoService.listarTodos();
     }
 }
