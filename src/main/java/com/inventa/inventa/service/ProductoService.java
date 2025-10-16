@@ -1,14 +1,17 @@
 package com.inventa.inventa.service;
 
+import com.inventa.inventa.dto.producto.ProductoRapidoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
 import com.inventa.inventa.entity.Categoria;
 import com.inventa.inventa.entity.Producto;
+import com.inventa.inventa.exceptions.BadRequestException;
 import com.inventa.inventa.exceptions.NotFoundException;
 import com.inventa.inventa.mapper.ProductoMapper;
 import com.inventa.inventa.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +52,35 @@ public class ProductoService {
     }
 
     public Producto guardar(Producto producto) {
+        return productoRepository.save(producto);
+    }
+
+    public Producto crearProductoRapido(ProductoRapidoRequestDTO dto) {
+        // 1. Validar que el SKU no exista
+        if (productoRepository.findBySku(dto.getSku()) != null) {
+            throw new BadRequestException("Ya existe un producto con el SKU: " + dto.getSku());
+        }
+
+        // 2. Obtener la categoría
+        Categoria categoria = categoriaService.buscarPorId(dto.getCategoriaId())
+                .orElseThrow(() -> new NotFoundException("Categoría no encontrada con id: " + dto.getCategoriaId()));
+
+        // 3. Crear la nueva entidad Producto
+        Producto producto = new Producto();
+        producto.setSku(dto.getSku());
+        producto.setNombre(dto.getNombre());
+        producto.setCategoria(categoria);
+        producto.setStockMinimo(dto.getStockMinimo());
+
+        // 4. Asignar valores por defecto
+        producto.setDescripcion(""); // Opcional: descripción vacía
+        producto.setUltimoCosto(BigDecimal.ZERO);
+        producto.setPrecioMinorista(BigDecimal.ZERO);
+        producto.setPrecioMayorista(BigDecimal.ZERO);
+        producto.setStockActual(BigDecimal.ZERO);
+        producto.setUnidadMedida("Unidad"); // Valor por defecto
+
+        // 5. Guardar y devolver el nuevo producto
         return productoRepository.save(producto);
     }
 

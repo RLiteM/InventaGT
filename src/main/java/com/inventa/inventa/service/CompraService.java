@@ -91,6 +91,22 @@ public class CompraService {
             // Actualizar el stock y costo del producto
             producto.setStockActual(producto.getStockActual().add(detalleDTO.getCantidad()));
             producto.setUltimoCosto(detalleDTO.getCostoUnitarioCompra());
+
+            // NUEVA LÓGICA: Sugerir precios si están en cero
+            BigDecimal costoUnitario = detalleDTO.getCostoUnitarioCompra();
+            // Sugerir precio minorista si es cero
+            if (producto.getPrecioMinorista().compareTo(BigDecimal.ZERO) == 0 && costoUnitario.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal margenMinorista = new BigDecimal("1.30"); // 30% de margen
+                BigDecimal nuevoPrecioMinorista = costoUnitario.multiply(margenMinorista);
+                producto.setPrecioMinorista(nuevoPrecioMinorista);
+            }
+            // Sugerir precio mayorista si es cero
+            if (producto.getPrecioMayorista().compareTo(BigDecimal.ZERO) == 0 && costoUnitario.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal margenMayorista = new BigDecimal("1.15"); // 15% de margen
+                BigDecimal nuevoPrecioMayorista = costoUnitario.multiply(margenMayorista);
+                producto.setPrecioMayorista(nuevoPrecioMayorista);
+            }
+
             productoRepository.save(producto);
 
             montoCalculado = montoCalculado.add(subtotal);

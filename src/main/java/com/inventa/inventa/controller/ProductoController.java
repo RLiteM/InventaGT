@@ -1,11 +1,13 @@
 package com.inventa.inventa.controller;
 
 import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
+import com.inventa.inventa.dto.producto.ProductoRapidoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
 import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.mapper.ProductoMapper;
 import com.inventa.inventa.service.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +46,13 @@ public class ProductoController {
         Producto producto = new Producto();
         productoMapper.updateEntityFromRequest(producto, dto);
         return productoMapper.toResponse(productoService.guardar(producto));
+    }
+
+    @PostMapping("/rapido")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProductoResponseDTO crearRapido(@Valid @RequestBody ProductoRapidoRequestDTO dto) {
+        Producto nuevoProducto = productoService.crearProductoRapido(dto);
+        return productoMapper.toResponse(nuevoProducto);
     }
 
     @PutMapping("/{id}")
