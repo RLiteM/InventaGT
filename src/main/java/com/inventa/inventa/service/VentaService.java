@@ -69,6 +69,9 @@ public class VentaService {
                     .orElseThrow(() -> new NotFoundException("Lote no encontrado con id: " + detalleDTO.getLoteId()));
             
             Producto producto = lote.getProducto();
+            if (producto == null) {
+                throw new NotFoundException("No se encontró un producto asociado al lote con id: " + lote.getLoteId());
+            }
 
             if (lote.getCantidadActual().compareTo(detalleDTO.getCantidad()) < 0) {
                 throw new BadRequestException("Stock insuficiente para '" + producto.getNombre() + "' en lote " + lote.getLoteId() +
