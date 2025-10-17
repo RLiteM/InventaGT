@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,41 +60,119 @@ public class VentaService {
         venta.setCliente(cliente);
         venta.setFechaVenta(java.time.LocalDateTime.now());
         venta.setMetodoPago(MetodoPago.valueOf(ventaDTO.getMetodoPago()));
-        venta.setMontoTotal(BigDecimal.ZERO); // Se calculará
+        venta.setMontoTotal(BigDecimal.ZERO);
         Venta savedVenta = ventaRepository.save(venta);
 
         BigDecimal montoCalculado = BigDecimal.ZERO;
 
         for (DetalleVentaRequestDTO detalleDTO : ventaDTO.getDetalles()) {
-            Lote lote = loteRepository.findById(detalleDTO.getLoteId())
-                    .orElseThrow(() -> new NotFoundException("Lote no encontrado con id: " + detalleDTO.getLoteId()));
-            
-            Producto producto = lote.getProducto();
-            if (producto == null) {
-                throw new NotFoundException("No se encontró un producto asociado al lote con id: " + lote.getLoteId());
+            if (detalleDTO.getCantidad() == null || detalleDTO.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BadRequestException("La cantidad debe ser mayor a 0");
             }
 
-            if (lote.getCantidadActual().compareTo(detalleDTO.getCantidad()) < 0) {
-                throw new BadRequestException("Stock insuficiente para '" + producto.getNombre() + "' en lote " + lote.getLoteId() +
-                        ". Stock actual: " + lote.getCantidadActual() + ", requerido: " + detalleDTO.getCantidad());
+            // Compatibilidad: si llega loteId explícito
+            if (detalleDTO.getLoteId() != null) {
+                Lote lote = loteRepository.findById(detalleDTO.getLoteId())
+                        .orElseThrow(() -> new NotFoundException("Lote no encontrado con id: " + detalleDTO.getLoteId()));
+
+                Producto producto = lote.getProducto();
+                if (producto == null) {
+                    throw new NotFoundException("No se encontró un producto asociado al lote con id: " + lote.getLoteId());
+                }
+
+                // No permitir ventas de lotes vencidos
+                if (lote.getFechaCaducidad().isBefore(LocalDate.now())) {
+                    throw new BadRequestException("El lote " + lote.getLoteId() + " está vencido y no puede venderse");
+                }
+
+                if (lote.getCantidadActual().compareTo(detalleDTO.getCantidad()) < 0) {
+                    throw new BadRequestException("Stock insuficiente para '" + producto.getNombre() + "' en lote " + lote.getLoteId() +
+                            ". Stock actual: " + lote.getCantidadActual() + ", requerido: " + detalleDTO.getCantidad());
+                }
+
+                BigDecimal precioUnitario = (detalleDTO.getPrecioUnitarioVenta() != null
+                        && detalleDTO.getPrecioUnitarioVenta().compareTo(BigDecimal.ZERO) > 0)
+                        ? detalleDTO.getPrecioUnitarioVenta()
+                        : calcularPrecioUnitario(producto, cliente);
+
+                // Regla: no vender por debajo del costo del lote
+                BigDecimal costoUnitario = lote.getDetalleCompra() != null ? lote.getDetalleCompra().getCostoUnitarioCompra() : null;
+                if (costoUnitario != null && precioUnitario.compareTo(costoUnitario) < 0) {
+                    throw new BadRequestException("Precio por debajo del costo para '" + producto.getNombre() +
+                            "' en lote " + lote.getLoteId() + ". Precio: " + precioUnitario + ", Costo: " + costoUnitario);
+                }
+
+                lote.setCantidadActual(lote.getCantidadActual().subtract(detalleDTO.getCantidad()));
+                producto.setStockActual(producto.getStockActual().subtract(detalleDTO.getCantidad()));
+
+                DetalleVenta detalleVenta = new DetalleVenta();
+                detalleVenta.setVenta(savedVenta);
+                detalleVenta.setLote(lote);
+                detalleVenta.setCantidad(detalleDTO.getCantidad());
+                detalleVenta.setPrecioUnitarioVenta(precioUnitario);
+                BigDecimal subtotal = detalleDTO.getCantidad().multiply(precioUnitario);
+                detalleVenta.setSubtotal(subtotal);
+                detalleVentaRepository.save(detalleVenta);
+
+                loteRepository.save(lote);
+                productoRepository.save(producto);
+
+                montoCalculado = montoCalculado.add(subtotal);
+                continue;
             }
 
-            lote.setCantidadActual(lote.getCantidadActual().subtract(detalleDTO.getCantidad()));
-            producto.setStockActual(producto.getStockActual().subtract(detalleDTO.getCantidad()));
+            // Asignación automática por productoId (FEFO)
+            Integer productoId = detalleDTO.getProductoId();
+            if (productoId == null) {
+                throw new BadRequestException("Se requiere productoId o loteId en el detalle de venta");
+            }
 
-            DetalleVenta detalleVenta = new DetalleVenta();
-            detalleVenta.setVenta(savedVenta);
-            detalleVenta.setLote(lote);
-            detalleVenta.setCantidad(detalleDTO.getCantidad());
-            detalleVenta.setPrecioUnitarioVenta(detalleDTO.getPrecioUnitarioVenta());
-            BigDecimal subtotal = detalleDTO.getCantidad().multiply(detalleDTO.getPrecioUnitarioVenta());
-            detalleVenta.setSubtotal(subtotal);
-            detalleVentaRepository.save(detalleVenta);
-            
-            loteRepository.save(lote);
-            productoRepository.save(producto);
+            Producto producto = productoRepository.findById(productoId)
+                    .orElseThrow(() -> new NotFoundException("Producto no encontrado con id: " + productoId));
 
-            montoCalculado = montoCalculado.add(subtotal);
+            BigDecimal aVender = detalleDTO.getCantidad();
+            BigDecimal disponible = loteRepository.sumCantidadDisponible(productoId, LocalDate.now());
+            List<Lote> lotes = loteRepository.findLotesDisponiblesFefo(productoId, LocalDate.now());
+
+            if (disponible.compareTo(aVender) < 0) {
+                throw new BadRequestException("Stock insuficiente para '" + producto.getNombre() + "'. Disponible: " + disponible + ", requerido: " + aVender);
+            }
+
+            BigDecimal precioUnitario = (detalleDTO.getPrecioUnitarioVenta() != null
+                    && detalleDTO.getPrecioUnitarioVenta().compareTo(BigDecimal.ZERO) > 0)
+                    ? detalleDTO.getPrecioUnitarioVenta()
+                    : calcularPrecioUnitario(producto, cliente);
+
+            for (Lote l : lotes) {
+                if (aVender.compareTo(BigDecimal.ZERO) <= 0) break;
+
+                BigDecimal delLote = l.getCantidadActual().min(aVender);
+
+                // Regla: no vender por debajo del costo del lote consumido
+                BigDecimal costoUnitarioLote = l.getDetalleCompra() != null ? l.getDetalleCompra().getCostoUnitarioCompra() : null;
+                if (costoUnitarioLote != null && precioUnitario.compareTo(costoUnitarioLote) < 0) {
+                    throw new BadRequestException("Precio por debajo del costo para '" + producto.getNombre() +
+                            "' en lote " + l.getLoteId() + ". Precio: " + precioUnitario + ", Costo: " + costoUnitarioLote);
+                }
+
+                l.setCantidadActual(l.getCantidadActual().subtract(delLote));
+                producto.setStockActual(producto.getStockActual().subtract(delLote));
+
+                DetalleVenta detalleVenta = new DetalleVenta();
+                detalleVenta.setVenta(savedVenta);
+                detalleVenta.setLote(l);
+                detalleVenta.setCantidad(delLote);
+                detalleVenta.setPrecioUnitarioVenta(precioUnitario);
+                BigDecimal subtotal = delLote.multiply(precioUnitario);
+                detalleVenta.setSubtotal(subtotal);
+                detalleVentaRepository.save(detalleVenta);
+
+                loteRepository.save(l);
+                productoRepository.save(producto);
+
+                montoCalculado = montoCalculado.add(subtotal);
+                aVender = aVender.subtract(delLote);
+            }
         }
 
         savedVenta.setMontoTotal(montoCalculado);
@@ -102,5 +181,12 @@ public class VentaService {
 
     public void eliminar(Integer id) {
         ventaRepository.deleteById(id);
+    }
+
+    private BigDecimal calcularPrecioUnitario(Producto producto, Cliente cliente) {
+        if (cliente != null && cliente.getTipoCliente() == Cliente.TipoCliente.Mayorista) {
+            return producto.getPrecioMayorista();
+        }
+        return producto.getPrecioMinorista();
     }
 }

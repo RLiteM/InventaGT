@@ -6,11 +6,18 @@ import lombok.Data;
 
 @Data
 public class DetalleVentaRequestDTO {
+    // Nuevo: permitir que el front envíe productoId (preferido)
+    private Integer productoId;
     private Integer loteId;
     private BigDecimal cantidad;
+    // Dejado para compatibilidad; el backend calculará el precio si es nulo o incluso lo ignorará
     private BigDecimal precioUnitarioVenta;
 
     // Explicit Getters
+    public Integer getProductoId() {
+        return productoId;
+    }
+
     public Integer getLoteId() {
         return loteId;
     }
@@ -24,6 +31,10 @@ public class DetalleVentaRequestDTO {
     }
 
     // Explicit Setters
+    public void setProductoId(Integer productoId) {
+        this.productoId = productoId;
+    }
+
     public void setLoteId(Integer loteId) {
         this.loteId = loteId;
     }
@@ -36,4 +47,3 @@ public class DetalleVentaRequestDTO {
         this.precioUnitarioVenta = precioUnitarioVenta;
     }
 }
-

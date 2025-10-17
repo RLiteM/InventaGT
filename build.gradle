@@ -24,6 +24,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.sendgrid:sendgrid-java:4.10.0'
 
+    // Migraciones de base de datos
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
     // Spring Security para autenticación y autorización
     implementation 'org.springframework.boot:spring-boot-starter-security'
 

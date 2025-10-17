@@ -4,6 +4,7 @@ import com.inventa.inventa.dto.producto.ProductoNombreSkuDTO;
 import com.inventa.inventa.dto.producto.ProductoRapidoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoRequestDTO;
 import com.inventa.inventa.dto.producto.ProductoResponseDTO;
+import com.inventa.inventa.dto.producto.ProductoPrecioDTO;
 import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.mapper.ProductoMapper;
 import com.inventa.inventa.service.ProductoService;
@@ -31,6 +32,27 @@ public class ProductoController {
     @GetMapping
     public List<ProductoResponseDTO> listar(@RequestParam(required = false) String search, @RequestParam(required = false) Integer proveedorId) {
         return productoService.listar(search, proveedorId).stream().map(productoMapper::toResponse).collect(Collectors.toList());
+    }
+
+    @GetMapping("/precios")
+    public List<ProductoPrecioDTO> listarPrecios(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer proveedorId,
+            @RequestParam(required = false, name = "tipoCliente") String tipoCliente
+    ) {
+        final boolean mayorista = tipoCliente != null && tipoCliente.equalsIgnoreCase("Mayorista");
+        return productoService.listar(search, proveedorId).stream()
+                .map(p -> {
+                    ProductoPrecioDTO dto = new ProductoPrecioDTO();
+                    dto.setProductoId(p.getProductoId());
+                    dto.setSku(p.getSku());
+                    dto.setNombre(p.getNombre());
+                    dto.setPrecioMinorista(p.getPrecioMinorista());
+                    dto.setPrecioMayorista(p.getPrecioMayorista());
+                    dto.setPrecioAplicable(mayorista ? p.getPrecioMayorista() : p.getPrecioMinorista());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
