@@ -92,6 +92,14 @@ public class ProductoService {
         return productoRepository.findBySku(sku);
     }
 
+    public List<Producto> findProductosConStockCritico() {
+        return productoRepository.findProductosConStockCritico();
+    }
+
+    public List<Producto> findAllParaResumen() {
+        return productoRepository.findAllParaResumen();
+    }
+
     public ProductoResponseDTO partialUpdate(Integer id, ProductoRequestDTO dto) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Producto no encontrado con id: " + id));

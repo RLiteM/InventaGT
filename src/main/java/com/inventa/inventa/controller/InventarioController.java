@@ -24,16 +24,12 @@ public class InventarioController {
 
     @GetMapping("/resumen")
     public List<ProductoResponseDTO> resumenInventario() {
-        // TODO: This should be a more specific service call, not a generic search
-        return productoService.listar(null, null).stream().map(productoMapper::toResponse).collect(Collectors.toList());
+        return productoService.findAllParaResumen().stream().map(productoMapper::toResponse).collect(Collectors.toList());
     }
 
     @GetMapping("/criticos")
     public List<ProductoResponseDTO> productosConStockCritico() {
-        // TODO: This logic should be moved to the service layer
-        return productoService.listar(null, null).stream()
-                .filter(producto -> producto.getStockActual() != null && producto.getStockMinimo() != null
-                        && producto.getStockActual().compareTo(producto.getStockMinimo()) <= 0)
+        return productoService.findProductosConStockCritico().stream()
                 .map(productoMapper::toResponse)
                 .collect(Collectors.toList());
     }

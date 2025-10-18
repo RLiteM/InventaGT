@@ -21,4 +21,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
     @Query("SELECT count(p) FROM Producto p WHERE COALESCE((SELECT SUM(l.cantidadActual) FROM Lote l WHERE l.producto = p), 0) <= :threshold")
     long countLowStockProducts(@Param("threshold") long threshold);
+
+    @Query("SELECT p FROM Producto p WHERE p.stockActual <= p.stockMinimo")
+    List<Producto> findProductosConStockCritico();
+
+    @Query("SELECT p FROM Producto p")
+    List<Producto> findAllParaResumen();
 }
