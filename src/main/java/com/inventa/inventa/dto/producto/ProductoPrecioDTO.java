@@ -17,5 +17,6 @@ public class ProductoPrecioDTO {
     private BigDecimal precioMayorista;
     // Opcional para conveniencia del POS cuando se especifique tipoCliente
     private BigDecimal precioAplicable;
+    private BigDecimal stockActual;
 }
 

@@ -50,6 +50,7 @@ public class ProductoController {
                     dto.setPrecioMinorista(p.getPrecioMinorista());
                     dto.setPrecioMayorista(p.getPrecioMayorista());
                     dto.setPrecioAplicable(mayorista ? p.getPrecioMayorista() : p.getPrecioMinorista());
+                    dto.setStockActual(p.getStockActual());
                     return dto;
                 })
                 .collect(Collectors.toList());
