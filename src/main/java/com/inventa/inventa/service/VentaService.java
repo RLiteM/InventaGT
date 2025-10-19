@@ -131,8 +131,11 @@ public class VentaService {
                     .orElseThrow(() -> new NotFoundException("Producto no encontrado con id: " + productoId));
 
             BigDecimal aVender = detalleDTO.getCantidad();
-            BigDecimal disponible = loteRepository.sumCantidadDisponible(productoId, LocalDate.now());
             List<Lote> lotes = loteRepository.findLotesDisponiblesFefo(productoId, LocalDate.now());
+
+            BigDecimal disponible = lotes.stream()
+                    .map(Lote::getCantidadActual)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             if (disponible.compareTo(aVender) < 0) {
                 throw new BadRequestException("Stock insuficiente para '" + producto.getNombre() + "'. Disponible: " + disponible + ", requerido: " + aVender);
