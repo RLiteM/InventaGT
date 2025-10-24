@@ -216,7 +216,17 @@ public class AjusteInventarioService {
         Producto producto = lote.getProducto();
         if (producto == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El lote seleccionado no tiene un producto asociado");
+                    "El lote seleccionado con ID " + lote.getLoteId() + " no tiene un producto asociado");
+        }
+
+        // Defensive null checks for data integrity
+        if (lote.getCantidadActual() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Conflicto de datos: El Lote con ID " + lote.getLoteId() + " tiene un stock nulo (null). Por favor, corrija los datos en la base de datos.");
+        }
+        if (producto.getStockActual() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Conflicto de datos: El Producto con ID " + producto.getProductoId() + " ('" + producto.getNombre() + "') tiene un stock nulo (null). Por favor, corrija los datos en la base de datos.");
         }
 
         BigDecimal stockActualLote = lote.getCantidadActual();
