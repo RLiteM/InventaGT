@@ -1,6 +1,8 @@
 package com.inventa.inventa.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +19,7 @@ import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.entity.Usuario;
 import com.inventa.inventa.mapper.AjusteInventarioMapper;
 import com.inventa.inventa.repository.AjusteInventarioRepository;
+import com.inventa.inventa.repository.LoteRepository;
 
 @Service
 public class AjusteInventarioService {
@@ -25,17 +28,20 @@ public class AjusteInventarioService {
     private final ProductoService productoService;
     private final UsuarioService usuarioService;
     private final AjusteInventarioMapper ajusteInventarioMapper;
+    private final LoteRepository loteRepository;
 
     public AjusteInventarioService(AjusteInventarioRepository ajusteInventarioRepository,
             LoteService loteService,
             ProductoService productoService,
             UsuarioService usuarioService,
-            AjusteInventarioMapper ajusteInventarioMapper) {
+            AjusteInventarioMapper ajusteInventarioMapper,
+            LoteRepository loteRepository) {
         this.ajusteInventarioRepository = ajusteInventarioRepository;
         this.loteService = loteService;
         this.productoService = productoService;
         this.usuarioService = usuarioService;
         this.ajusteInventarioMapper = ajusteInventarioMapper;
+        this.loteRepository = loteRepository;
     }
 
     public List<AjusteInventario> listar() {
@@ -46,27 +52,122 @@ public class AjusteInventarioService {
         return ajusteInventarioRepository.findById(id);
     }
 
-   
     @Transactional
     public AjusteInventario guardarDesdeDto(AjusteInventarioRequestDTO dto) {
-        Lote lote = loteService.buscarPorId(dto.getLoteId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
         Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        AjusteInventario entity = ajusteInventarioMapper.toEntity(dto, lote, usuario);
-        return guardar(entity);
+        validarCantidad(dto.getCantidad());
+
+        List<AjusteInventario> ajustesCreados = new ArrayList<>();
+
+        switch (dto.getMotivoAjuste()) {
+            case AJUSTE_CONTEO:
+                ajustesCreados.add(procesarAjusteConteo(dto, usuario));
+                break;
+            case VENCIMIENTO:
+                ajustesCreados.addAll(procesarAjusteVencimiento(dto, usuario));
+                break;
+            case DAÑO:
+                ajustesCreados.add(procesarAjusteDaño(dto, usuario));
+                break;
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Motivo de ajuste no válido");
+        }
+
+        if (ajustesCreados.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo procesar el ajuste, verifique los datos (ej. no hay stock vencido para el producto).");
+        }
+        
+        return ajustesCreados.get(0);
+    }
+
+    private AjusteInventario procesarAjusteConteo(AjusteInventarioRequestDTO dto, Usuario usuario) {
+        if (dto.getLoteId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Para AJUSTE_CONTEO, se requiere el loteId.");
+        }
+        if (dto.getTipoAjuste() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Para AJUSTE_CONTEO, se requiere el tipoAjuste (Entrada o Salida).");
+        }
+
+        Lote lote = loteService.buscarPorId(dto.getLoteId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado: " + dto.getLoteId()));
+        
+        AjusteInventario ajuste = ajusteInventarioMapper.toEntity(dto, lote, usuario);
+        return guardar(ajuste);
+    }
+
+    private List<AjusteInventario> procesarAjusteVencimiento(AjusteInventarioRequestDTO dto, Usuario usuario) {
+        if (dto.getProductoId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Para VENCIMIENTO, se requiere el productoId.");
+        }
+        if (dto.getTipoAjuste() != TipoAjuste.Salida) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ajustes por VENCIMIENTO solo pueden ser de tipo Salida.");
+        }
+
+        List<Lote> lotesVencidos = loteRepository.findLotesVencidos(dto.getProductoId(), LocalDate.now());
+        if (lotesVencidos.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<AjusteInventario> ajustesCreados = new ArrayList<>();
+        BigDecimal cantidadRestantePorAjustar = dto.getCantidad();
+
+        for (Lote lote : lotesVencidos) {
+            if (cantidadRestantePorAjustar.compareTo(BigDecimal.ZERO) <= 0) {
+                break;
+            }
+
+            BigDecimal cantidadEnLote = lote.getCantidadActual();
+            BigDecimal cantidadAAjustarEsteLote = cantidadEnLote.min(cantidadRestantePorAjustar);
+
+            AjusteInventarioRequestDTO dtoParaLote = createDtoForSubAdjustment(dto, cantidadAAjustarEsteLote);
+            
+            AjusteInventario ajuste = ajusteInventarioMapper.toEntity(dtoParaLote, lote, usuario);
+            ajustesCreados.add(guardar(ajuste));
+
+            cantidadRestantePorAjustar = cantidadRestantePorAjustar.subtract(cantidadAAjustarEsteLote);
+        }
+
+        return ajustesCreados;
+    }
+
+    private AjusteInventario procesarAjusteDaño(AjusteInventarioRequestDTO dto, Usuario usuario) {
+        if (dto.getTipoAjuste() != TipoAjuste.Salida) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ajustes por DAÑO solo pueden ser de tipo Salida.");
+        }
+
+        Lote lote;
+        if (dto.getLoteId() != null) {
+            lote = loteService.buscarPorId(dto.getLoteId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado: " + dto.getLoteId()));
+        } else if (dto.getProductoId() != null) {
+            lote = loteRepository.findLotesDisponiblesFefo(dto.getProductoId(), LocalDate.now())
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay lotes disponibles con stock para el producto " + dto.getProductoId() + " (FIFO)."));
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Para DAÑO, se requiere loteId o productoId.");
+        }
+
+        AjusteInventario ajuste = ajusteInventarioMapper.toEntity(dto, lote, usuario);
+        return guardar(ajuste);
+    }
+    
+    private AjusteInventarioRequestDTO createDtoForSubAdjustment(AjusteInventarioRequestDTO original, BigDecimal newQuantity) {
+        AjusteInventarioRequestDTO subDto = new AjusteInventarioRequestDTO();
+        subDto.setMotivoAjuste(original.getMotivoAjuste());
+        subDto.setDescripcion(original.getDescripcion());
+        subDto.setTipoAjuste(original.getTipoAjuste());
+        subDto.setUsuarioId(original.getUsuarioId());
+        subDto.setProductoId(original.getProductoId());
+        subDto.setCantidad(newQuantity);
+        return subDto;
     }
 
     @Transactional
     public AjusteInventario actualizarDesdeDto(Integer id, AjusteInventarioRequestDTO dto) {
-        Lote lote = loteService.buscarPorId(dto.getLoteId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado"));
-        Usuario usuario = usuarioService.buscarPorId(dto.getUsuarioId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-
-        AjusteInventario entity = ajusteInventarioMapper.toEntity(dto, lote, usuario);
-        return actualizar(id, entity);
+        throw new UnsupportedOperationException("La actualización de ajustes ha sido deshabilitada temporalmente debido a la nueva lógica de creación.");
     }
 
     @Transactional
@@ -86,40 +187,14 @@ public class AjusteInventarioService {
 
     @Transactional
     public AjusteInventario actualizar(Integer id, AjusteInventario ajusteActualizado) {
-        validarCantidad(ajusteActualizado.getCantidad());
-
-        AjusteInventario existente = ajusteInventarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ajuste no encontrado"));
-
-        revertirImpactoInventario(existente);
-
-        Lote loteNuevo = obtenerLoteGestionado(ajusteActualizado.getLote());
-
-        existente.setLote(loteNuevo);
-        existente.setUsuario(ajusteActualizado.getUsuario());
-        existente.setTipoAjuste(ajusteActualizado.getTipoAjuste());
-        existente.setCantidad(ajusteActualizado.getCantidad());
-        existente.setMotivo(ajusteActualizado.getMotivo());
-
-        aplicarAjusteSobreInventario(loteNuevo, existente.getTipoAjuste(), existente.getCantidad());
-
-        productoService.guardar(loteNuevo.getProducto());
-        loteService.guardar(loteNuevo);
-
-        return ajusteInventarioRepository.save(existente);
+        throw new UnsupportedOperationException("La actualización de ajustes ha sido deshabilitada temporalmente debido a la nueva lógica de creación.");
     }
 
     @Transactional
     public void eliminar(Integer id) {
-        AjusteInventario ajuste = ajusteInventarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ajuste no encontrado"));
-
-        revertirImpactoInventario(ajuste);
-
-        ajusteInventarioRepository.delete(ajuste);
+        throw new UnsupportedOperationException("La eliminación de ajustes ha sido deshabilitada temporalmente debido a la nueva lógica de creación.");
     }
 
-   
     private void validarCantidad(BigDecimal cantidad) {
         if (cantidad == null || cantidad.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cantidad debe ser mayor a cero");
@@ -148,18 +223,22 @@ public class AjusteInventarioService {
         BigDecimal stockActualProducto = producto.getStockActual();
 
         switch (tipoAjuste) {
-            case Entrada -> {
+            case Entrada:
                 lote.setCantidadActual(stockActualLote.add(cantidad));
                 producto.setStockActual(stockActualProducto.add(cantidad));
-            }
-            case Salida -> {
-                if (stockActualLote.compareTo(cantidad) < 0 || stockActualProducto.compareTo(cantidad) < 0) {
+                break;
+            case Salida:
+                if (stockActualLote.compareTo(cantidad) < 0) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "No hay existencias suficientes para registrar el ajuste de salida");
+                            "No hay existencias suficientes en el lote para registrar el ajuste de salida");
+                }
+                 if (stockActualProducto.compareTo(cantidad) < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "No hay existencias suficientes en el producto para registrar el ajuste de salida");
                 }
                 lote.setCantidadActual(stockActualLote.subtract(cantidad));
                 producto.setStockActual(stockActualProducto.subtract(cantidad));
-            }
+                break;
         }
     }
 

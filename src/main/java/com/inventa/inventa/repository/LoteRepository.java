@@ -31,6 +31,10 @@ public interface LoteRepository extends JpaRepository<Lote, Integer> {
     List<Lote> findLotesDisponiblesFefo(@Param("productoId") Integer productoId,
                                         @Param("hoy") LocalDate hoy);
 
+    @Query("SELECT l FROM Lote l WHERE l.producto.productoId = :productoId AND l.fechaCaducidad < :hoy AND l.cantidadActual > 0 ORDER BY l.fechaCaducidad ASC")
+    List<Lote> findLotesVencidos(@Param("productoId") Integer productoId, @Param("hoy") LocalDate hoy);
+
+
     @Query("SELECT COALESCE(SUM(l.cantidadActual), 0) FROM Lote l \n" +
            "WHERE l.producto.productoId = :productoId \n" +
            "  AND l.cantidadActual > 0 \n" +

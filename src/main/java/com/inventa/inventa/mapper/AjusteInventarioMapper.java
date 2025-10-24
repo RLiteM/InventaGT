@@ -16,9 +16,15 @@ public class AjusteInventarioMapper {
         AjusteInventario entity = new AjusteInventario();
         entity.setLote(lote);
         entity.setUsuario(usuario);
-        entity.setTipoAjuste(TipoAjuste.valueOf(dto.getTipoAjuste()));
+        entity.setTipoAjuste(dto.getTipoAjuste());
         entity.setCantidad(dto.getCantidad());
-        entity.setMotivo(dto.getMotivo());
+
+        String motivo = dto.getMotivoAjuste().name();
+        if (dto.getDescripcion() != null && !dto.getDescripcion().trim().isEmpty()) {
+            motivo += ": " + dto.getDescripcion().trim();
+        }
+        entity.setMotivo(motivo);
+
         return entity;
     }
 
