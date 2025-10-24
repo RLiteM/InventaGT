@@ -114,6 +114,11 @@ public class AjusteInventarioService {
         BigDecimal cantidadRestantePorAjustar = dto.getCantidad();
 
         for (Lote lote : lotesVencidos) {
+            if (lote.getCantidadActual() == null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Conflicto de datos: El Lote con ID " + lote.getLoteId() + " tiene un stock nulo (null). Por favor, corrija los datos.");
+            }
+
             if (cantidadRestantePorAjustar.compareTo(BigDecimal.ZERO) <= 0) {
                 break;
             }
@@ -148,6 +153,11 @@ public class AjusteInventarioService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay lotes disponibles con stock para el producto " + dto.getProductoId() + " (FIFO)."));
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Para DAÑO, se requiere loteId o productoId.");
+        }
+
+        if (lote.getCantidadActual() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Conflicto de datos: El Lote con ID " + lote.getLoteId() + " tiene un stock nulo (null). Por favor, corrija los datos.");
         }
 
         AjusteInventario ajuste = ajusteInventarioMapper.toEntity(dto, lote, usuario);
