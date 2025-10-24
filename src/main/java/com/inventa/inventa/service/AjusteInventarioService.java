@@ -105,15 +105,21 @@ public class AjusteInventarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ajustes por VENCIMIENTO solo pueden ser de tipo Salida.");
         }
 
+        // Combine expired and non-expired lots, with expired ones first.
         List<Lote> lotesVencidos = loteRepository.findLotesVencidos(dto.getProductoId(), LocalDate.now());
-        if (lotesVencidos.isEmpty()) {
+        List<Lote> lotesDisponibles = loteRepository.findLotesDisponiblesFefo(dto.getProductoId(), LocalDate.now());
+        
+        List<Lote> lotesParaAjustar = new ArrayList<>(lotesVencidos);
+        lotesParaAjustar.addAll(lotesDisponibles);
+
+        if (lotesParaAjustar.isEmpty()) {
             return new ArrayList<>();
         }
 
         List<AjusteInventario> ajustesCreados = new ArrayList<>();
         BigDecimal cantidadRestantePorAjustar = dto.getCantidad();
 
-        for (Lote lote : lotesVencidos) {
+        for (Lote lote : lotesParaAjustar) {
             if (lote.getCantidadActual() == null) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, 
                     "Conflicto de datos: El Lote con ID " + lote.getLoteId() + " tiene un stock nulo (null). Por favor, corrija los datos.");
