@@ -7,6 +7,7 @@ import com.inventa.inventa.dto.ajusteinventario.AjusteInventarioResponseDTO;
 import com.inventa.inventa.entity.AjusteInventario;
 import com.inventa.inventa.entity.AjusteInventario.TipoAjuste;
 import com.inventa.inventa.entity.Lote;
+import com.inventa.inventa.entity.Producto;
 import com.inventa.inventa.entity.Usuario;
 
 @Component
