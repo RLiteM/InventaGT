@@ -33,14 +33,17 @@ public class AjusteInventarioMapper {
         dto.setAjusteId(ajuste.getAjusteId());
         if (ajuste.getLote() != null) {
             dto.setLoteId(ajuste.getLote().getLoteId());
-            if (ajuste.getLote().getProducto() != null) {
-                dto.setProductoId(ajuste.getLote().getProducto().getProductoId());
-                dto.setProductoNombre(ajuste.getLote().getProducto().getNombre());
+            Producto producto = ajuste.getLote().getProducto();
+            if (producto != null) {
+                dto.setProductoId(producto.getProductoId());
+                dto.setProductoNombre(producto.getNombre());
             }
         }
         if (ajuste.getUsuario() != null) {
             dto.setUsuarioId(ajuste.getUsuario().getUsuarioId());
-            dto.setUsuarioNombre(ajuste.getUsuario().getNombreCompleto());
+            if (ajuste.getUsuario().getNombreCompleto() != null) {
+                dto.setUsuarioNombre(ajuste.getUsuario().getNombreCompleto());
+            }
         }
         dto.setFechaAjuste(ajuste.getFechaAjuste());
         if (ajuste.getTipoAjuste() != null) {
