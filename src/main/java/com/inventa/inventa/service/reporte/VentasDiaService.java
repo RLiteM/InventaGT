@@ -3,6 +3,7 @@ package com.inventa.inventa.service.reporte;
 import com.inventa.inventa.dto.reporte.VentasDiaMetodoPagoDTO;
 import com.inventa.inventa.dto.reporte.VentasDiaReporteDTO;
 import com.inventa.inventa.dto.reporte.VentasDiaVentaRecienteDTO;
+import com.inventa.inventa.dto.reporte.VentasDiaListadoItemDTO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +69,26 @@ public class VentasDiaService {
         return dto;
     }
 
+    public List<VentasDiaListadoItemDTO> listarVentasDelDia() {
+        String sql = "SELECT " +
+                "u.nombre_completo AS vendedor, " +
+                "c.nombre_completo AS cliente, " +
+                "v.monto_total, " +
+                "v.metodo_pago " +
+                "FROM tienda_garcia.venta v " +
+                "JOIN tienda_garcia.usuario u ON v.usuario_id = u.usuario_id " +
+                "JOIN tienda_garcia.cliente c ON v.cliente_id = c.cliente_id " +
+                "WHERE DATE(v.fecha_venta) = CURRENT_DATE " +
+                "ORDER BY v.fecha_venta DESC";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new VentasDiaListadoItemDTO(
+                rs.getString("vendedor"),
+                rs.getString("cliente"),
+                rs.getBigDecimal("monto_total"),
+                rs.getString("metodo_pago")
+        ));
+    }
+
     private VentasDiaReporteDTO mapResumen(ResultSet rs) throws SQLException {
         long totalVentas = rs.getLong("total_ventas");
         BigDecimal totalMonto = rs.getBigDecimal("total_monto");
@@ -77,4 +98,3 @@ public class VentasDiaService {
         return new VentasDiaReporteDTO(totalVentas, totalMonto, promedioVenta, ventaMaxima, ventaMinima, null, null);
     }
 }
-

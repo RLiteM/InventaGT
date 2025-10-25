@@ -1,6 +1,7 @@
 package com.inventa.inventa.controller.reporte;
 
 import com.inventa.inventa.dto.reporte.VentasDiaReporteDTO;
+import com.inventa.inventa.dto.reporte.VentasDiaListadoItemDTO;
 import com.inventa.inventa.service.reporte.VentasDiaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,5 +22,9 @@ public class ReporteVentasDiaController {
     public ResponseEntity<VentasDiaReporteDTO> getVentasDelDia() {
         return ResponseEntity.ok(ventasDiaService.getVentasDelDia());
     }
-}
 
+    @GetMapping("/ventas-dia/listado")
+    public ResponseEntity<java.util.List<VentasDiaListadoItemDTO>> listarVentasDelDia() {
+        return ResponseEntity.ok(ventasDiaService.listarVentasDelDia());
+    }
+}
