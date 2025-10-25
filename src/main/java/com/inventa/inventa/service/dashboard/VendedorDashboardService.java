@@ -18,9 +18,10 @@ public class VendedorDashboardService {
                 "COALESCE(SUM(v.monto_total), 0) AS total_vendido_hoy, " +
                 "COUNT(*) AS cantidad_ventas_hoy, " +
                 "COUNT(DISTINCT v.cliente_id) AS clientes_atendidos_hoy " +
-                "FROM tienda_garcia.venta v " +
+                "FROM venta v " +
                 "WHERE v.usuario_id = ? " +
-                "AND v.fecha_venta::date = CURRENT_DATE";
+                "AND v.fecha_venta >= CURRENT_DATE " +
+                "AND v.fecha_venta < CURRENT_DATE + INTERVAL '1 day'";
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> new ResumenVendedorHoyDTO(
                 rs.getBigDecimal("total_vendido_hoy"),
@@ -29,4 +30,3 @@ public class VendedorDashboardService {
         ), usuarioId);
     }
 }
-
