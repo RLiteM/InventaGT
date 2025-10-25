@@ -14,18 +14,13 @@ public class VendedorDashboardService {
     }
 
     public ResumenVendedorHoyDTO getResumenVendedorHoy(Integer usuarioId) {
-        String sql = "WITH bounds AS (" +
-                "  SELECT date_trunc('day', (now() AT TIME ZONE 'America/Guatemala')) AS start_gt, " +
-                "         date_trunc('day', (now() AT TIME ZONE 'America/Guatemala')) + INTERVAL '1 day' AS end_gt" +
-                ") " +
-                "SELECT " +
-                "  COALESCE(SUM(v.monto_total), 0) AS total_vendido_hoy, " +
-                "  COUNT(*) AS cantidad_ventas_hoy, " +
-                "  COUNT(DISTINCT v.cliente_id) AS clientes_atendidos_hoy " +
-                "FROM venta v, bounds b " +
+        String sql = "SELECT " +
+                "COUNT(*) AS cantidad_ventas_hoy, " +
+                "COUNT(DISTINCT v.cliente_id) AS clientes_atendidos_hoy, " +
+                "COALESCE(SUM(v.monto_total), 0) AS total_vendido_hoy " +
+                "FROM tienda_garcia.venta v " +
                 "WHERE v.usuario_id = ? " +
-                "  AND (v.fecha_venta AT TIME ZONE 'America/Guatemala') >= b.start_gt " +
-                "  AND (v.fecha_venta AT TIME ZONE 'America/Guatemala') <  b.end_gt";
+                "AND DATE(v.fecha_venta) = CURRENT_DATE";
 
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> new ResumenVendedorHoyDTO(
                 rs.getBigDecimal("total_vendido_hoy"),
