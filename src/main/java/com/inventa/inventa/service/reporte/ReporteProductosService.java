@@ -2,6 +2,8 @@ package com.inventa.inventa.service.reporte;
 
 import com.inventa.inventa.dto.reporte.ProductoSinStockItemDTO;
 import com.inventa.inventa.dto.reporte.ProductosResumenStockDTO;
+import com.inventa.inventa.dto.reporte.ProductosListadoItemDTO;
+import com.inventa.inventa.dto.reporte.ProductosReporteDTO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,30 @@ public class ReporteProductosService {
         ));
     }
 
+    public ProductosReporteDTO getResumenConListado() {
+        ProductosResumenStockDTO resumen = getResumenStock();
+
+        String sql = "SELECT p.sku, p.nombre, COALESCE(cat.nombre, '') AS categoria, p.unidad_medida, " +
+                "p.stock_actual, p.stock_minimo, p.precio_minorista, p.precio_mayorista, p.ultimo_costo " +
+                "FROM tienda_garcia.producto p " +
+                "LEFT JOIN tienda_garcia.categoria cat ON p.categoria_id = cat.categoria_id " +
+                "ORDER BY p.nombre ASC";
+
+        List<ProductosListadoItemDTO> items = jdbcTemplate.query(sql, (rs, rowNum) -> new ProductosListadoItemDTO(
+                rs.getString("sku"),
+                rs.getString("nombre"),
+                rs.getString("categoria"),
+                rs.getString("unidad_medida"),
+                rs.getBigDecimal("stock_actual"),
+                rs.getBigDecimal("stock_minimo"),
+                rs.getBigDecimal("precio_minorista"),
+                rs.getBigDecimal("precio_mayorista"),
+                rs.getBigDecimal("ultimo_costo")
+        ));
+
+        return new ProductosReporteDTO(resumen, items);
+    }
+
     private ProductosResumenStockDTO mapResumen(ResultSet rs) throws SQLException {
         long totalProductos = rs.getLong("total_productos");
         BigDecimal stockTotal = rs.getBigDecimal("stock_total");
@@ -48,4 +74,3 @@ public class ReporteProductosService {
         return new ProductosResumenStockDTO(totalProductos, stockTotal, valorInventario, productosSinStock, productosBajoStock);
     }
 }
-

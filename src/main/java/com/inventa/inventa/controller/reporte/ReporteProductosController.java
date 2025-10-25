@@ -2,6 +2,7 @@ package com.inventa.inventa.controller.reporte;
 
 import com.inventa.inventa.dto.reporte.ProductoSinStockItemDTO;
 import com.inventa.inventa.dto.reporte.ProductosResumenStockDTO;
+import com.inventa.inventa.dto.reporte.ProductosReporteDTO;
 import com.inventa.inventa.service.reporte.ReporteProductosService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,5 +30,9 @@ public class ReporteProductosController {
     public ResponseEntity<List<ProductoSinStockItemDTO>> listarProductosSinStock() {
         return ResponseEntity.ok(reporteProductosService.listarProductosSinStock());
     }
-}
 
+    @GetMapping("/resumen-listado")
+    public ResponseEntity<ProductosReporteDTO> getResumenConListado() {
+        return ResponseEntity.ok(reporteProductosService.getResumenConListado());
+    }
+}
